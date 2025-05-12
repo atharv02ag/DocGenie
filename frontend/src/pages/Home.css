@@ -1,0 +1,146 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+.app-container {
+  background-color: #0f1c3f;
+  color: white;
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 40px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.logo-icon {
+  background: white;
+  color: black;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-right: 8px;
+}
+
+.nav a {
+  color: white;
+  margin-left: 24px;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.nav a:hover {
+  text-decoration: underline;
+}
+
+.main {
+  text-align: center;
+  padding: 64px 24px;
+}
+
+.main-title {
+  font-size: 40px;
+  font-weight: bold;
+  margin-bottom: 16px;
+}
+
+.main-subtitle {
+  font-size: 18px;
+  color: #cbd5e1;
+  max-width: 600px;
+  margin: 0 auto 32px auto;
+}
+
+.start-button {
+  background-color: #60a5fa;
+  color: black;
+  padding: 12px 24px;
+  font-size: 18px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.start-button:hover {
+  background-color: #3b82f6;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  margin-top: 64px;
+  color: black;
+}
+
+.feature-card {
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.feature-card span{
+  display: block;
+}
+
+.icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 8px;
+}
+
+.how-it-works {
+  background: white;
+  color: black;
+  padding: 64px 24px;
+  margin-top: 64px;
+}
+
+.how-it-works h2 {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 32px;
+}
+
+.steps {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+.step {
+  text-align: center;
+  width: 200px;
+}
+
+.step-number {
+  font-size: 24px;
+  color: #3b82f6;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.footer {
+  background-color: #0f1c3f;
+  color: #94a3b8;
+  font-size: 14px;
+  text-align: center;
+  padding: 24px;
+  margin-top: 64px;
+}
+
+.footer span {
+  margin: 0 12px;
+}
