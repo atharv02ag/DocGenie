@@ -31,9 +31,15 @@ body {
   margin-right: 8px;
 }
 
+.nav {
+  display : flex;
+  align-items: center;
+  justify-content: center;
+  gap : 24px;
+}
+
 .nav a {
   color: white;
-  margin-left: 24px;
   text-decoration: none;
   font-size: 14px;
 }
