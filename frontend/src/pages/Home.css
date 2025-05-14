@@ -66,6 +66,12 @@ body {
   margin: 0 auto 32px auto;
 }
 
+.start-button-wrapper{
+  display : flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .start-button {
   background-color: #60a5fa;
   color: black;
@@ -74,6 +80,7 @@ body {
   border: none;
   border-radius: 8px;
   cursor: pointer;
+  max-width: 150px;
 }
 
 .start-button:hover {
@@ -89,10 +96,13 @@ body {
 }
 
 .feature-card {
+  display: flex;
   background: white;
   padding: 16px;
   border-radius: 12px;
-  text-align: center;
+  align-items: center;
+  justify-content: center;
+  gap : 8px;
 }
 
 .feature-card span{
