@@ -11,6 +11,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
 
 
 export default function Home() {
@@ -60,6 +69,19 @@ export default function Home() {
         )
     }
 
+    const SignInPopup = 
+        (<Dialog>
+        <DialogTrigger className="start-button">Get Started!</DialogTrigger>
+        <DialogContent>
+            <DialogHeader>
+            <DialogTitle>Please Sign In with you Google Account!</DialogTitle>
+            <DialogDescription>
+                Don't Worry, we won't spam your inbox. Your data is secured.
+            </DialogDescription>
+            </DialogHeader>
+        </DialogContent>
+        </Dialog>);
+
     useEffect(()=>{
         const savedUser = localStorage.getItem("user");
         const savedToken = localStorage.getItem("access_token");
@@ -96,10 +118,10 @@ export default function Home() {
                         Revolutionize the Way <br /> You Read Research
                     </h1>
                     <p className="main-subtitle">
-                        Upload, Analyze, and Interact with Academic Papers—Powered by AI
+                        Upload, Analyze, and Interact with Academic Papers — Powered by AI
                     </p>
                     <div className="start-button-wrapper">
-                        <button className="start-button">Get Started</button>
+                        {(!LoggedIn) ? SignInPopup : <Link to="/Library"><button className="start-button">Get Started!</button></Link>}
                     </div>
                     
                     <div className="features">

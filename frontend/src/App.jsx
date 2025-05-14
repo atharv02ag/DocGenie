@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Home from './pages/Home.jsx'
 import Library from './pages/Library.jsx'
 import Upload from './pages/Upload.jsx'
+import ProtectedRoutes from './lib/ProtectedRoutes.jsx'
 
 function App() {
   return (
@@ -16,14 +17,16 @@ function App() {
               path='/'
               element={<Home />}
             />
-            <Route
-              path='/Library'
-              element={<Library />}
-            />
-            <Route
-              path='/Upload'
-              element={<Upload />}
-            />
+            <Route element={<ProtectedRoutes />}>
+              <Route
+                path='/Library'
+                element={<Library />}
+              />
+              <Route
+                path='/Upload'
+                element={<Upload />}
+              />
+            </Route>
           </Routes>
         </div>
       </BrowserRouter>
