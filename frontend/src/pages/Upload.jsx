@@ -12,9 +12,18 @@ export default function Upload() {
     keywords: '',
   });
 
-  const handleUpload = () => {
+  const handleUpload = async() => {
     console.log('Uploading:', file);
     console.log('Metadata:', metadata);
+    const formData = new FormData();
+    formData.append('file',file);
+    const res = await fetch('http://localhost:8000/api/upload',
+      {
+        method : "POST",
+        body : formData,
+      }
+    )
+    console.log(res);
   };
 
   return (
@@ -37,8 +46,8 @@ export default function Upload() {
           <h2>Upload Research Paper</h2>
 
           <div className="form-group">
-            <label>Select PDF File</label>
-            <input type="file" accept=".pdf" onChange={(e) => setFile(e.target.files[0])} />
+              <label>Select PDF File</label>
+              <input type="file" accept=".png,.jpg,.jpeg" onChange={(e) => setFile(e.target.files[0])} />
           </div>
 
           <div className="form-grid">

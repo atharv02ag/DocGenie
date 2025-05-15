@@ -57,15 +57,16 @@ export default function Home() {
     const avatarTag = (pictureSrc)=>{
         return(
             <DropdownMenu>
-            <DropdownMenuTrigger><Avatar className="w-8 h-8 cursor-pointer">
-                                <AvatarImage src={pictureSrc} />
-                                </Avatar>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
-            </DropdownMenuContent>
-            </DropdownMenu> 
+            <DropdownMenuTrigger>
+                <Avatar className="w-8 h-8 cursor-pointer">
+                    <AvatarImage src={pictureSrc} />
+                </Avatar>
+             </DropdownMenuTrigger>
+             <DropdownMenuContent>
+                 <DropdownMenuItem>Profile</DropdownMenuItem>
+                 <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+             </DropdownMenuContent>
+             </DropdownMenu> 
         )
     }
 
@@ -74,7 +75,7 @@ export default function Home() {
         <DialogTrigger className="start-button">Get Started!</DialogTrigger>
         <DialogContent>
             <DialogHeader>
-            <DialogTitle>Please Sign In with you Google Account!</DialogTitle>
+            <DialogTitle>Please sign in with your Google Account!</DialogTitle>
             <DialogDescription>
                 Don't Worry, we won't spam your inbox. Your data is secured.
             </DialogDescription>
