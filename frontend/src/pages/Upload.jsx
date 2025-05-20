@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './Upload.css';
 
+const serverURL = import.meta.env.VITE_SERVER_PATH;
+
 export default function Upload() {
   const [file, setFile] = useState(null);
   const [metadata, setMetadata] = useState({
@@ -15,9 +17,13 @@ export default function Upload() {
   const handleUpload = async() => {
     console.log('Uploading:', file);
     console.log('Metadata:', metadata);
+    if(!file || !metadata.title || !metadata.authors || !metadata.publicationDate){
+      console.log('Fill the form properly');
+    }
     const formData = new FormData();
     formData.append('file',file);
-    const res = await fetch('http://localhost:8000/api/upload',
+    formData.append('metadata',JSON.stringify(metadata));
+    const res = await fetch(`${serverURL}/api/upload`,
       {
         method : "POST",
         body : formData,
@@ -47,7 +53,7 @@ export default function Upload() {
 
           <div className="form-group">
               <label>Select PDF File</label>
-              <input type="file" accept=".png,.jpg,.jpeg" onChange={(e) => setFile(e.target.files[0])} />
+              <input type="file" accept=".pdf" onChange={(e) => setFile(e.target.files[0])} />
           </div>
 
           <div className="form-grid">
@@ -61,7 +67,7 @@ export default function Upload() {
             </div>
 
             <div className="form-group">
-              <label>Authors</label>
+              <label>Authors (comma seperated)</label>
               <input
                 type="text"
                 value={metadata.authors}
@@ -79,7 +85,7 @@ export default function Upload() {
             </div>
 
             <div className="form-group">
-              <label>Keywords</label>
+              <label>Keywords (comma seperated)</label>
               <input
                 type="text"
                 value={metadata.keywords}
