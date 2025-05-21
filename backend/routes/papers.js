@@ -9,6 +9,7 @@ const storage = multer.memoryStorage();
 const upload = multer(storage);
 const router = express.Router();
 
+//upload form
 router.post('/',upload.single('file'), async(req,res,next)=>{
     try{
         const encodedDatab64 = Buffer.from(req.file.buffer).toString("base64");
@@ -24,9 +25,20 @@ router.post('/',upload.single('file'), async(req,res,next)=>{
                                               tags : metadata.keywords.split(','),
                                              });
         console.log('new paper created!');
+        res.status(200).send('Paper Uploaded Successfully!')
     }
     catch(err){
         console.log(err);
+    }
+})
+
+//get all documents
+router.get('/',async(req,res)=>{
+    try{
+        const paperDocs = await papers.find({});
+        res.status(200).send(paperDocs);
+    }catch(err){
+        console.log(err.message);
     }
 })
 

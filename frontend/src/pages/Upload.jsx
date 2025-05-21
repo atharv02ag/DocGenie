@@ -14,40 +14,46 @@ export default function Upload() {
     keywords: '',
   });
 
+  const [loading, setLoading] = useState(0);
+
   const handleUpload = async() => {
+    setLoading(1);
     console.log('Uploading:', file);
     console.log('Metadata:', metadata);
     if(!file || !metadata.title || !metadata.authors || !metadata.publicationDate){
       console.log('Fill the form properly');
+      setTimeout(()=>{setLoading(0)},1000);
     }
     const formData = new FormData();
     formData.append('file',file);
     formData.append('metadata',JSON.stringify(metadata));
-    const res = await fetch(`${serverURL}/api/upload`,
-      {
-        method : "POST",
-        body : formData,
-      }
-    )
-    console.log(res);
+    try{
+      const res = await fetch(`${serverURL}/api/papers`,
+        {
+          method : "POST",
+          body : formData,
+        }
+      )
+      console.log(res);
+      setLoading(0);
+    }catch(err){
+      console.log(err.message);
+      setLoading(0);
+    }
   };
 
   return (
     <div className="upload-container">
-      {/* Sidebar */}
       <aside className="sidebar">
-        <div className="sidebar-logo">Intelligent Research Paper Management</div>
+        <Link to='/'><div className="sidebar-logo">DocGenie</div></Link>
         <nav className="sidebar-nav">
           <Link to = "/Library" className="sidebar-link">📚 Library</Link>
-          <Link to="/insights" className="sidebar-link">💡 Insights</Link>
           <Link to="/profile" className="sidebar-link">👤 Profile</Link>
         </nav>
       </aside>
 
-      {/* Main Content */}
       <div className="main-content">
 
-        {/* Upload Box */}
         <div className="upload-box">
           <h2>Upload Research Paper</h2>
 
@@ -93,8 +99,9 @@ export default function Upload() {
               />
             </div>
           </div>
-
-          <button className="upload-btn" onClick={handleUpload}>Upload & Analyze</button>
+          <div className="upload-btn-wrapper">
+              <button className={`upload-btn ${loading ? 'loading' : ''}`} onClick={handleUpload}>{loading ? "Uploading..." : "Upload"}</button>
+          </div>
         </div>
       </div>
     </div>

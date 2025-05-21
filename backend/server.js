@@ -4,13 +4,13 @@ const cors = require('cors');
 require('dotenv').config();
 
 //routes
-const uploadRoutes = require('./routes/upload.js');
+const paperRoutes = require('./routes/papers.js');
 
 const PORT = 8000;
 
 app.use(cors());
 
-app.use('/api/upload',uploadRoutes);
+app.use('/api/papers',paperRoutes);
 
 mongoose.connect(process.env.MONGO_URI)
     .then(()=>{

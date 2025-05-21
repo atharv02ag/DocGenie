@@ -109,7 +109,12 @@
   margin-bottom: 1.5rem;
 }
 
-/* Upload Button */
+.upload-btn-wrapper{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .upload-btn {
   background-color: #2563eb;
   color: white;
@@ -121,6 +126,14 @@
   cursor: pointer;
 }
 
+.loading{
+  background-color: #8ea2d7;
+}
+
 .upload-btn:hover {
   background-color: #1d4ed8;
+}
+
+.loading:hover {
+  background-color: #8ea2d7;
 }
