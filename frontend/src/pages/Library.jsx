@@ -24,6 +24,7 @@ export default function Library() {
       const curPaperDocs = data.map((item) => {
         item.tags.forEach(tag => tagSet.add(tag));
         return {
+            id : item._id,
             title: item.title,
             tags: item.tags,
             year: new Date(item.publish_date).getFullYear(),
@@ -118,6 +119,7 @@ export default function Library() {
 
         <section className="paper-list">
           {displayed.map((paper, index) => (
+            <Link to={`/View/${paper.id}`}>
             <div className="paper-item" key={index}>
               <div className="paper-row">
                 <div className="paper-title">{paper.title}</div>
@@ -131,6 +133,7 @@ export default function Library() {
               </div>
               {index !== displayed.length - 1 && <hr />}
             </div>
+            </Link>
           ))}
         </section>
       </main>

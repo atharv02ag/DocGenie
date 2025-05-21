@@ -42,4 +42,15 @@ router.get('/',async(req,res)=>{
     }
 })
 
+//get a single document
+router.get('/:id',async(req,res)=>{
+    try{
+        const id = req.params.id;
+        const paperDoc = await papers.findById(id);
+        res.status(200).send(paperDoc);
+    }catch(err){
+        console.log(err.message);
+    }
+})
+
 module.exports = router;
