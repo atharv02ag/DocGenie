@@ -5,12 +5,14 @@ require('dotenv').config();
 
 //routes
 const paperRoutes = require('./routes/papers.js');
+const insightRoutes = require('./routes/insights.js');
 
 const PORT = 8000;
 
 app.use(cors());
 
 app.use('/api/papers',paperRoutes);
+app.use('/api/insights',insightRoutes);
 
 mongoose.connect(process.env.MONGO_URI)
     .then(()=>{
