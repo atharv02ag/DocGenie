@@ -6,6 +6,7 @@ import Home from './pages/Home.jsx'
 import Library from './pages/Library.jsx'
 import Upload from './pages/Upload.jsx'
 import View from './pages/View.jsx'
+import Insight from './pages/Insight.jsx'
 import ProtectedRoutes from './lib/ProtectedRoutes.jsx'
 
 function App() {
@@ -32,6 +33,10 @@ function App() {
                 element={<View />}
               />
             </Route>
+             <Route
+                path='/Insight/:id'
+                element={<Insight />}
+              />
           </Routes>
         </div>
       </BrowserRouter>
