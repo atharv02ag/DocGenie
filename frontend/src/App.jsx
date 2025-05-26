@@ -7,9 +7,14 @@ import Library from './pages/Library.jsx'
 import Upload from './pages/Upload.jsx'
 import View from './pages/View.jsx'
 import Insight from './pages/Insight.jsx'
+import Error from './pages/Error.jsx'
 import ProtectedRoutes from './lib/ProtectedRoutes.jsx'
 
 function App() {
+
+  const [errorMsg, setErrorMsg] = useState('');
+  const [errorCode, setErrorCode] = useState(0);
+
   return (
     <div className='App'>
       <BrowserRouter>
@@ -22,20 +27,24 @@ function App() {
             <Route element={<ProtectedRoutes />}>
               <Route
                 path='/Library'
-                element={<Library />}
+                element={<Library setErrorMsg = {setErrorMsg} setErrorCode = {setErrorCode} errorCode = {errorCode}/>}
               />
               <Route
                 path='/Upload'
-                element={<Upload />}
+                element={<Upload setErrorMsg = {setErrorMsg} setErrorCode = {setErrorCode} errorCode = {errorCode}/>}
               />
               <Route
                 path='/View/:id'
-                element={<View />}
+                element={<View setErrorMsg = {setErrorMsg} setErrorCode = {setErrorCode} errorCode = {errorCode}/>}
+              />
+              <Route
+                path='/Insight/:id'
+                element={<Insight setErrorMsg = {setErrorMsg} setErrorCode = {setErrorCode} errorCode = {errorCode}/>}
               />
             </Route>
-             <Route
-                path='/Insight/:id'
-                element={<Insight />}
+              <Route 
+                path='/*'
+                element={<Error errorMessage={errorMsg} errorCode={errorCode}/>}
               />
           </Routes>
         </div>

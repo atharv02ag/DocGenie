@@ -1,11 +1,10 @@
-// UploadPage.jsx (JSX)
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Upload.css';
 
 const serverURL = import.meta.env.VITE_SERVER_PATH;
 
-export default function Upload() {
+export default function Upload({setErrorCode,setErrorMsg, errorCode}) {
   const [file, setFile] = useState(null);
   const [metadata, setMetadata] = useState({
     title: '',
@@ -15,6 +14,7 @@ export default function Upload() {
   });
 
   const [loading, setLoading] = useState(0);
+  const navigate = useNavigate();
 
   const handleUpload = async() => {
     setLoading(1);
@@ -28,17 +28,32 @@ export default function Upload() {
     formData.append('file',file);
     formData.append('metadata',JSON.stringify(metadata));
     try{
-      const res = await fetch(`${serverURL}/api/papers`,
+      const response = await fetch(`${serverURL}/api/papers`,
         {
           method : "POST",
           body : formData,
+          headers : {
+            "authorization" : `bearer ${localStorage.session}`,
+          },
         }
-      )
-      console.log(res);
+      );
+
+      if(!response.ok){
+        const data = await response.json();
+        if (data.action === 'REAUTHENTICATE') {
+            setErrorCode(response.status);
+        }
+        else{
+          setErrorCode(500);
+        }
+        throw new Error(data.error || 'Server Failed');
+      }
+      
       setLoading(0);
     }catch(err){
-      console.log(err.message);
+      setErrorMsg(err.message);
       setLoading(0);
+      navigate('/Error',{replace : true});
     }
   };
 

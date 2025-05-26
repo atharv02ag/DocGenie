@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import './View.css';
 
 import { Worker, Viewer } from '@react-pdf-viewer/core';
@@ -10,11 +10,11 @@ import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 
 const serverURL = import.meta.env.VITE_SERVER_PATH;
 
-export default function View() {
+export default function View({setErrorCode,setErrorMsg,errorCode}) {
 
     const {id} = useParams();
     const [metaData, setMetaData] = useState('');
-
+    const navigate = useNavigate();
     const toolbarPluginInstance = toolbarPlugin();
     const { renderDefaultToolbar, Toolbar } = toolbarPluginInstance;
 
@@ -32,13 +32,29 @@ export default function View() {
                 const response = await fetch(`${serverURL}/api/papers/${id}`,
                     {
                         method : "GET",
+                        headers : {
+                            "authorization" : `bearer ${localStorage.session}`,
+                        },
                     }
                 );
+                
+                if(!response.ok){
+                    const data = await response.json();
+                    if (data.action === 'REAUTHENTICATE') {
+                        setErrorCode(response.status);
+                    }
+                    else{
+                        setErrorCode(500);
+                    }
+                    throw new Error(data.error || 'Server Failed');
+                }
                 const item = await response.json();
                 setMetaData(item);
+
             }catch(err){
-                console.log(err.message);
+                setErrorMsg(err.message);
                 setMetaData('');
+                navigate('/Error',{replace : true});
             }
         }
         fetchData();

@@ -1,8 +1,6 @@
 const express = require('express');
-const multer = require('multer');
 const papers = require('../models/paperModel');
 const mongoose = require('mongoose');
-const handleUpload = require('../helpers/cloudinary_helper');
 const axios = require('axios');
 const pdfParse = require('pdf-parse');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
@@ -12,8 +10,6 @@ const path = require('path');
 
 require('dotenv').config();
 
-const storage = multer.memoryStorage();
-const upload = multer(storage);
 const router = express.Router();
 const gemini_api_key = process.env.API_KEY;
 const googleAI = new GoogleGenerativeAI(gemini_api_key);

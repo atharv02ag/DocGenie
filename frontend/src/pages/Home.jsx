@@ -2,7 +2,6 @@ import "./Home.css";
 import { BarChart2, FileText, HelpCircle, LayoutGrid } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useGoogleLogin, googleLogout } from "@react-oauth/google";
-import axios from 'axios';
 import { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -20,7 +19,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-
+const serverURL = import.meta.env.VITE_SERVER_PATH;
 
 export default function Home() {
 
@@ -28,30 +27,52 @@ export default function Home() {
     const [profilePic, setProfilePic] = useState('');
 
     const googleLogin = useGoogleLogin({
-        onSuccess: async (tokenResponse) => {
-            const userInfo = await axios.get(
-                'https://www.googleapis.com/oauth2/v3/userinfo',
-                { headers: { Authorization: `Bearer ${tokenResponse.access_token}` } },
-            );
+        onSuccess: async ({code}) => {
+            try{
+                const userInfo = await fetch(`${serverURL}/auth`,{
+                    method : "POST",
+                    body : JSON.stringify({
+                        code : code,
+                    }),
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8"
+                    },
+                });
 
-            console.log(userInfo.data);
-            localStorage.setItem("user", JSON.stringify(userInfo.data));
-            localStorage.setItem("access_token", tokenResponse.access_token);
+                if(!userInfo){
+                    throw new Error("Login failed")
+                }
 
-            setProfilePic(userInfo.data.picture);
-            setLoggedIn(1);
+                const userInfoJson = await userInfo.json();
+
+                console.log(userInfoJson);
+
+                const userData = {
+                    username : userInfoJson.username,
+                    picture : userInfoJson.picture,
+                };
+
+                localStorage.setItem("session", userInfoJson.sessionToken);
+                localStorage.setItem("user",JSON.stringify(userData));
+                setProfilePic(userInfoJson.picture);
+                setLoggedIn(1);
+            }
+            catch(err){
+                console.log(err.message);
+            }
+            
         },
         onError: errorResponse => console.log(errorResponse),
+        flow : 'auth-code',
     });
 
     const handleLogout = ()=>{
         googleLogout();
+        localStorage.removeItem("session");
         localStorage.removeItem("user");
-        localStorage.removeItem("access_token");
         setLoggedIn(0);
         setProfilePic('');
     }
-
 
     const avatarTag = (pictureSrc)=>{
         return(
@@ -83,15 +104,16 @@ export default function Home() {
         </Dialog>);
 
     useEffect(()=>{
+        const savedToken = localStorage.getItem("session");
         const savedUser = localStorage.getItem("user");
-        const savedToken = localStorage.getItem("access_token");
 
-        if (savedUser && savedToken) {
+        if (savedToken && savedUser) {
             const userInfoData = JSON.parse(savedUser);
             setProfilePic(userInfoData.picture);
             setLoggedIn(1);
         }
         else{
+            googleLogout();
             setProfilePic('');
             setLoggedIn(0);
         }

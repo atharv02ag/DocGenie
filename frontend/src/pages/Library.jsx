@@ -1,38 +1,64 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Library.css';
 
 const serverURL = import.meta.env.VITE_SERVER_PATH;
 
-export default function Library() {
+export default function Library({setErrorMsg, setErrorCode, errorCode}) {
   const [searchText, setSearchText] = useState('');
   const [sortBy, setSortBy] = useState('Date');
   const [activeFilter, setActiveFilter] = useState(null);
   const [paperDocs, setPaperDocs] = useState([]);
   const [displayed, setDisplayed] = useState([]);
   const [filters, setFilters] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(()=>{
     const fetchData = async()=>{
-      const response = await fetch(`${serverURL}/api/papers`,
-        {
-          method : "GET",
+      try{
+        const response = await fetch(`${serverURL}/api/papers`,
+          {
+            method : "GET",
+            headers : {
+              "authorization" : `bearer ${localStorage.session}`,
+            },
+          }
+        );
+
+        if(!response.ok){
+          const data = await response.json();
+          if (data.action === 'REAUTHENTICATE') {
+              setErrorCode(response.status);
+          }
+          else{
+              setErrorCode(500);
+          }
+          throw new Error(data.error || 'Server Failed');
         }
-      );
-      const data = await response.json();
-      const tagSet = new Set();
-      const curPaperDocs = data.map((item) => {
-        item.tags.forEach(tag => tagSet.add(tag));
-        return {
-            id : item._id,
-            title: item.title,
-            tags: item.tags,
-            year: new Date(item.publish_date).getFullYear(),
-            authors: item.authors.join(', '),
-          };
-      });
-      setPaperDocs(curPaperDocs);
-      setFilters(Array.from(tagSet));
+
+        const data = await response.json();
+        const tagSet = new Set();
+        const curPaperDocs = data.map((item) => {
+          item.tags.forEach(tag => tagSet.add(tag));
+          return {
+              id : item._id,
+              title: item.title,
+              tags: item.tags,
+              year: new Date(item.publish_date).getFullYear(),
+              authors: item.authors.join(', '),
+            };
+        });
+        setPaperDocs(curPaperDocs);
+        setFilters(Array.from(tagSet));
+      }
+      catch(err){
+        setErrorMsg(err.message);
+        setPaperDocs([]);
+        setFilters([]);
+        navigate('/Error',{replace : true});
+        console.log(err);
+      }
+      
     }
 
     fetchData();
@@ -84,9 +110,9 @@ export default function Library() {
 
           <label>Filter by</label>
           <div className="filter-buttons">
-            {filters.map((f) => (
+            {filters.map((f,index) => (
               <button
-                key={f}
+                key={index}
                 className={`btn filter-btn small-filter-btn ${activeFilter === f ? 'active' : ''}`}
                 onClick={() => setActiveFilter(activeFilter === f ? null : f)}
               >
