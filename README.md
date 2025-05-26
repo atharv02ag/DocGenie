@@ -1,1 +1,1 @@
-# DocGenie
+# DocGenie Project
