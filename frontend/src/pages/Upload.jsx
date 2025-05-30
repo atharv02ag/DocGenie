@@ -1,9 +1,10 @@
-// UploadPage.jsx (JSX)
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Upload.css';
 
-export default function Upload() {
+const serverURL = import.meta.env.VITE_SERVER_PATH;
+
+export default function Upload({setErrorCode,setErrorMsg, errorCode}) {
   const [file, setFile] = useState(null);
   const [metadata, setMetadata] = useState({
     title: '',
@@ -12,33 +13,68 @@ export default function Upload() {
     keywords: '',
   });
 
-  const handleUpload = () => {
+  const [loading, setLoading] = useState(0);
+  const navigate = useNavigate();
+
+  const handleUpload = async() => {
+    setLoading(1);
     console.log('Uploading:', file);
     console.log('Metadata:', metadata);
+    if(!file || !metadata.title || !metadata.authors || !metadata.publicationDate){
+      console.log('Fill the form properly');
+      setTimeout(()=>{setLoading(0)},1000);
+    }
+    const formData = new FormData();
+    formData.append('file',file);
+    formData.append('metadata',JSON.stringify(metadata));
+    try{
+      const response = await fetch(`${serverURL}/api/papers`,
+        {
+          method : "POST",
+          body : formData,
+          headers : {
+            "authorization" : `bearer ${localStorage.session}`,
+          },
+        }
+      );
+
+      if(!response.ok){
+        const data = await response.json();
+        if (data.action === 'REAUTHENTICATE') {
+            setErrorCode(response.status);
+        }
+        else{
+          setErrorCode(500);
+        }
+        throw new Error(data.error || 'Server Failed');
+      }
+      
+      setLoading(0);
+    }catch(err){
+      setErrorMsg(err.message);
+      setLoading(0);
+      navigate('/Error',{replace : true});
+    }
   };
 
   return (
     <div className="upload-container">
-      {/* Sidebar */}
       <aside className="sidebar">
-        <div className="sidebar-logo">Intelligent Research Paper Management</div>
+        <Link to='/'><div className="sidebar-logo">DocGenie</div></Link>
         <nav className="sidebar-nav">
           <Link to = "/Library" className="sidebar-link">📚 Library</Link>
-          <Link to="/insights" className="sidebar-link">💡 Insights</Link>
           <Link to="/profile" className="sidebar-link">👤 Profile</Link>
         </nav>
       </aside>
 
-      {/* Main Content */}
       <div className="main-content">
 
-        {/* Upload Box */}
         <div className="upload-box">
           <h2>Upload Research Paper</h2>
 
           <div className="form-group">
-            <label>Select PDF File</label>
-            <input type="file" accept=".pdf" onChange={(e) => setFile(e.target.files[0])} />
+              <label>Select PDF File</label>
+              <input type="file" accept=".pdf" onChange={(e) => setFile(e.target.files[0])} />
           </div>
 
           <div className="form-grid">
@@ -52,7 +88,7 @@ export default function Upload() {
             </div>
 
             <div className="form-group">
-              <label>Authors</label>
+              <label>Authors (comma seperated)</label>
               <input
                 type="text"
                 value={metadata.authors}
@@ -70,7 +106,7 @@ export default function Upload() {
             </div>
 
             <div className="form-group">
-              <label>Keywords</label>
+              <label>Keywords (comma seperated)</label>
               <input
                 type="text"
                 value={metadata.keywords}
@@ -78,8 +114,9 @@ export default function Upload() {
               />
             </div>
           </div>
-
-          <button className="upload-btn" onClick={handleUpload}>Upload & Analyze</button>
+          <div className="upload-btn-wrapper">
+              <button className={`upload-btn ${loading ? 'loading' : ''}`} onClick={handleUpload}>{loading ? "Uploading..." : "Upload"}</button>
+          </div>
         </div>
       </div>
     </div>

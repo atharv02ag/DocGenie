@@ -1,126 +1,146 @@
-/* UploadPage.css */
+/* Upload.css */
+
+/* Container for the entire layout */
 .upload-container {
   display: flex;
   min-height: 100vh;
-  background-color: #f8fafc;
-  font-family: sans-serif;
+  background-color: #e9f1fa;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Sidebar */
+/* Sidebar styling */
 .sidebar {
-  width: 220px;
-  background-color: #1f2937;
+  width: 175px !important;
+  padding: 2rem 1.5rem;
+  background: linear-gradient(to bottom, #252d32, #191e21);
   color: white;
   display: flex;
   flex-direction: column;
-  padding-top: 2rem;
+  align-items: flex-start;
 }
 
 .sidebar-logo {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: bold;
-  text-align: center;
   margin-bottom: 2rem;
+  color: #ffffff;
 }
 
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 1rem;
 }
 
 .sidebar-link {
-  color: #d1d5db;
+  color: #e2e8f0;
   text-decoration: none;
-  padding: 0.75rem 1rem;
-  margin: 0.25rem 0;
-  border-radius: 8px;
-  width: 100%;
-  text-align: center;
-  transition: background 0.3s;
+  font-size: 1.1rem;
+  transition: color 0.2s;
+  border-radius: 0.75rem !important;
+  padding: 0.6rem 1rem !important;
 }
 
 .sidebar-link:hover {
-  background-color: #374151;
-  color: white;
+  background: linear-gradient(to right, #e9f1fa, #e9f1fa); /* deep electric blue to soft sky */
+  color:#252d32 !important;
+  border-radius: 0.75rem;
+  padding: 0.6rem 1rem;
+  transform: scale(1.03);
+  box-shadow: 0 6px 24px rgba(201, 203, 204, 0.5);
+  transition: all 0.2s ease-in-out;
 }
 
-/* Main Content */
+
+/* Main content area */
 .main-content {
   flex: 1;
   display: flex;
-  flex-direction: column;
-}
-
-.upload-navbar {
-  padding: 1rem 2rem;
-  background-color: #ffffff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.logo {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #2563eb;
-}
-
-/* Upload Box */
-.upload-box {
-  background-color: #ffffff;
-  max-width: 800px;
-  margin: 2rem auto;
+  justify-content: center;
+  align-items: center;
   padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.upload-box {
+  background-color: #E9F1FA;
+  color: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  width: 100%;
+  max-width: 600px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
 }
 
 .upload-box h2 {
-  font-size: 1.75rem;
+  font-size: 1.8rem;
+  color: #00ABE4;
   margin-bottom: 1.5rem;
-  color: #1f2937;
 }
 
-/* Form Styling */
 .form-group {
-  margin-bottom: 1.25rem;
   display: flex;
   flex-direction: column;
+  margin-bottom: 1rem;
 }
 
 .form-group label {
-  font-size: 0.9rem;
-  color: #4b5563;
   margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #00ABE4;
 }
 
 .form-group input[type="text"],
-.form-group input[type="date"],
-.form-group input[type="file"] {
+.form-group input[type="file"],
+.form-group input[type="date"] {
   padding: 0.6rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border: 1px solid #64748b;
+  border-radius: 0.5rem;
+  background-color: #E9F1FA;
+  color: rgb(5, 5, 5);
   font-size: 1rem;
+}
+
+.form-group input::file-selector-button {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  margin-right: 1rem;
+  cursor: pointer;
 }
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: 1fr;
   gap: 1rem;
-  margin-bottom: 1.5rem;
 }
 
-/* Upload Button */
+.upload-btn-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
 .upload-btn {
-  background-color: #2563eb;
+  background: linear-gradient(to right, #6366f1, #3b82f6);
   color: white;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 500;
   border: none;
-  border-radius: 8px;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  border-radius: 0.75rem;
   cursor: pointer;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .upload-btn:hover {
-  background-color: #1d4ed8;
+  transform: scale(1.03);
+  box-shadow: 0 6px 24px rgba(99, 102, 241, 0.6);
+}
+
+.upload-btn.loading {
+  background: #c4c6c9;
+  color: #94a3b8;
+  cursor: not-allowed;
 }

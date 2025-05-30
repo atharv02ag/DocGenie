@@ -1,58 +1,90 @@
-// File: LibraryPage.jsx
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import './Library.css';
 
-export default function Library() {
+const serverURL = import.meta.env.VITE_SERVER_PATH;
+
+export default function Library({setErrorMsg, setErrorCode, errorCode}) {
   const [searchText, setSearchText] = useState('');
   const [sortBy, setSortBy] = useState('Date');
   const [activeFilter, setActiveFilter] = useState(null);
+  const [paperDocs, setPaperDocs] = useState([]);
+  const [displayed, setDisplayed] = useState([]);
+  const [filters, setFilters] = useState([]);
+  const navigate = useNavigate();
 
-  const papers = [
-    {
-      title: 'EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks',
-      authors: 'Mingxing Tan, Quoc V. Le',
-      year: '2019',
-      tags: ['Deep learning']
-    },
-    {
-      title: 'BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding',
-      authors: 'Jacob Devlin, Ming-Wei Chang, Kenton Lee, Kristina Toutanova',
-      year: '2019',
-      tags: ['NLP']
-    },
-    {
-      title: 'Attention Is All You Need',
-      authors: 'Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Allan N. Gomez, Lukasz Kaiser, Illia Polosukhin',
-      year: '2017',
-      tags: ['Transformer', 'Attention']
-    },
-    {
-      title: 'AutoML: A Survey of the State-of-the-Art',
-      authors: 'Marc’Aurelio Ranzato, Geoffrey Hinton, Ruslan Salakhutdinov, Oriol Vinyals',
-      year: '2016',
-      tags: ['Deep learning']
-    },
-  ];
+  useEffect(()=>{
+    const fetchData = async()=>{
+      try{
+        const response = await fetch(`${serverURL}/api/papers`,
+          {
+            method : "GET",
+            headers : {
+              "authorization" : `bearer ${localStorage.session}`,
+            },
+          }
+        );
 
-  const filters = ['Deep learning', 'NLP', 'Transformer', 'Attention'];
+        if(!response.ok){
+          const data = await response.json();
+          if (data.action === 'REAUTHENTICATE') {
+              setErrorCode(response.status);
+          }
+          else{
+              setErrorCode(500);
+          }
+          throw new Error(data.error || 'Server Failed');
+        }
 
-  const displayed = papers
-    .filter((paper) =>
-      (!activeFilter || paper.tags.includes(activeFilter)) &&
-      paper.title.toLowerCase().includes(searchText.toLowerCase())
-    )
-    .sort((a, b) => {
-      if (sortBy === 'Title') return a.title.localeCompare(b.title);
-      if (sortBy === 'Authors') return a.authors.localeCompare(b.authors);
-      return b.year.localeCompare(a.year);
-    });
+        const data = await response.json();
+        const tagSet = new Set();
+        const curPaperDocs = data.map((item) => {
+          item.tags.forEach(tag => tagSet.add(tag));
+          return {
+              id : item._id,
+              title: item.title,
+              tags: item.tags,
+              year: new Date(item.publish_date).getFullYear(),
+              authors: item.authors.join(', '),
+            };
+        });
+        setPaperDocs(curPaperDocs);
+        setFilters(Array.from(tagSet));
+      }
+      catch(err){
+        setErrorMsg(err.message);
+        setPaperDocs([]);
+        setFilters([]);
+        navigate('/Error',{replace : true});
+        console.log(err);
+      }
+      
+    }
+
+    fetchData();
+
+  },[])
+
+  useEffect(()=>{
+    const curDisplayed = paperDocs
+      .filter((paper) =>
+        (!activeFilter || paper.tags.includes(activeFilter)) &&
+        paper.title.toLowerCase().includes(searchText.toLowerCase())
+      )
+      .sort((a, b) => {
+        if (sortBy === 'Title') return a.title.localeCompare(b.title);
+        if (sortBy === 'Authors') return a.authors.localeCompare(b.authors);
+        return b.year - a.year;
+      });
+    setDisplayed(curDisplayed);
+  },[activeFilter,sortBy,paperDocs])
 
   return (
     <div className="library-page">
       <aside className="sidebar">
         <div className="sidebar-header">
-          <h2>Intelligent Research Paper Management</h2>
+          <Link to='/'><h2>DocGenie</h2></Link>
         </div>
 
         <button className="btn upload-btn small-btn">
@@ -60,14 +92,11 @@ export default function Library() {
         </button>
 
         <nav className="nav-links">
-          <button className="btn nav-btn active small-btn">
+          <button className="btn nav-btn small-btn">
             <span className="label">📚 Library</span>
           </button>
           <button className="btn nav-btn small-btn">
-            <Link to="/Insights" className="label">💡 Insights</Link>
-          </button>
-          <button className="btn nav-btn small-btn">
-            <Link to="/Questions" className="label">❓Questions</Link>
+            <Link to="/Profile" className="label">👤 Profile</Link>
           </button>
         </nav>
 
@@ -82,9 +111,9 @@ export default function Library() {
 
           <label>Filter by</label>
           <div className="filter-buttons">
-            {filters.map((f) => (
+            {filters.map((f,index) => (
               <button
-                key={f}
+                key={index}
                 className={`btn filter-btn small-filter-btn ${activeFilter === f ? 'active' : ''}`}
                 onClick={() => setActiveFilter(activeFilter === f ? null : f)}
               >
@@ -117,19 +146,21 @@ export default function Library() {
 
         <section className="paper-list">
           {displayed.map((paper, index) => (
+            <Link to={`/View/${paper.id}`}>
             <div className="paper-item" key={index}>
               <div className="paper-row">
                 <div className="paper-title">{paper.title}</div>
                 <div className="paper-authors">{paper.authors}</div>
                 <div className="paper-meta">
                   <span className="year">{paper.year}</span>
-                  {paper.tags.map((tag) => (
-                    <span className="tag-pill" key={tag}>{tag}</span>
+                  {paper.tags.map((tag,index) => (
+                    <span className="tag-pill" key={index}>{tag}</span>
                   ))}
                 </div>
               </div>
               {index !== displayed.length - 1 && <hr />}
             </div>
+            </Link>
           ))}
         </section>
       </main>

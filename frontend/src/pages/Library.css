@@ -60,20 +60,23 @@
 }
 
 .nav-btn {
-  color: #d1d5db;
+  color: #e2e8f0;
   text-decoration: none;
-  padding: 0.75rem 1rem;
-  margin: 0.25rem 0;
-  border-radius: 8px;
-  width: 100%;
-  text-align: center;
-  transition: background 0.3s;
+  font-size: 1.1rem;
+  transition: color 0.2s;
+  border-radius: 0.75rem !important;
+  padding: 0.6rem 1rem !important;
 }
 
 .nav-btn.active,
 .nav-btn:hover {
-  background-color: #374151;
-  color: white;
+  background: linear-gradient(to right, #e9f1fa, #e9f1fa); /* deep electric blue to soft sky */
+  color:#252d32 !important;
+  border-radius: 0.75rem;
+  padding: 0.6rem 1rem;
+  transform: scale(1.03);
+  box-shadow: 0 6px 24px rgba(201, 203, 204, 0.5);
+  transition: all 0.2s ease-in-out;
 }
 
 .search-filter label {
@@ -96,25 +99,28 @@
 .filter-buttons {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .filter-btn {
-  background: #1f2937;
-  color: #ffffff;
-   text-align: left;
+  background: #E9F1FA;
+  color: #252d32;
+  text-align: center !important;
+  padding: 0.4rem 0.6rem;
+
 }
 
 .small-filter-btn {
-  padding: 6px 10px;
   font-size: 12px;
   border-radius: 6px;
 }
 
 .filter-btn.active,
 .filter-btn:hover {
-   background-color: #374151;
-  color: white;
+  background-color: #252d32;
+  color: #E9F1FA;
+  transform: scale(1.03);
+  box-shadow: 0 6px 24px rgba(201, 203, 204, 0.5);
 }
 
 .main {
@@ -187,6 +193,7 @@
   gap: 8px;
   font-size: 14px;
   color: #374151;
+  overflow-y: auto;
 }
 
 .year {
@@ -194,9 +201,9 @@
 }
 
 .tag-pill {
-  background: #f3f4f6;
-  color: #111827;
-  padding: 4px 8px;
+  background: #111213;
+  color: #f1f3f6;
+  padding:  0.2rem 1rem;
   border-radius: 9999px;
   font-size: 12px;
 }
