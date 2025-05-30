@@ -44,7 +44,18 @@ router.get('/:id',async(req,res)=>{
         const pdfBuffer = await fsPromises.readFile(tempPath);
         const { text: fullText } = await pdfParse(pdfBuffer);
 
-        const prompt=`summarize this text : ${fullText}`;
+        const prompt=`I want you to summarize this text in a well structured manner dont make the summary too small.Generate comprehensive yet 
+        concise summary and Identify and highlight key findings, methodologies, and conclusions and present the paper's core contributions clearly.
+        Also can you directly make the headings bold from your side. 1:Introduction, 2:Summary divided into paragraphs, 3:highlight key findings,
+        methodologies,4:conclusions and present the paper's core contributions clearly, do not violate the order or format.
+        After writing the summary, Score papers based on multiple factors (writing quality, methodology, adherence to academic standards)
+        Provide detailed feedback on areas of improvement
+        Suggest specific changes to enhance the paper's quality
+        Identify potential issues with citations, statistical methods, or experimental design.
+        leave a line after every paragraph and new heading.
+        Use <br>  wherever you need to leave a line.
+        DO NOT FORGET THE <br>.
+        : ${fullText}`;
         const result=await Model.generateContent(prompt);
         summary=result.response.text();
         console.log(summary)

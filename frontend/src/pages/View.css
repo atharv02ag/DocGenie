@@ -7,8 +7,7 @@
 
 /* Sidebar */
 .sidebar {
-  width: 220px;
-  background-color: #1f2937;
+  width: 175px !important;
   color: white;
   display: flex;
   flex-direction: column;

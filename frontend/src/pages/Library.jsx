@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Library.css';
@@ -91,7 +92,7 @@ export default function Library({setErrorMsg, setErrorCode, errorCode}) {
         </button>
 
         <nav className="nav-links">
-          <button className="btn nav-btn active small-btn">
+          <button className="btn nav-btn small-btn">
             <span className="label">📚 Library</span>
           </button>
           <button className="btn nav-btn small-btn">

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import './Insight.css';
+import { marked } from 'marked';
 
 const serverURL = import.meta.env.VITE_SERVER_PATH;
 
@@ -97,10 +98,17 @@ export default function Insight({setErrorCode, setErrorMsg, errorCode}) {
                 </nav>
             </aside>
             <main className="insight-main">
+                {!metaData  && (
+                <section className="summary-section">
+                    <h2>Fetching Insights...</h2>
+                </section>
+                )}
                 {metaData.summary && (
                 <section className="summary-section">
-                    <h2>{info.title} Summary</h2>
-                    <p>{metaData.summary}</p>
+                    <h2>{info.title}</h2>
+                    {/* <ReactMarkdown>{metaData.summary}</ReactMarkdown> */}
+                    <div dangerouslySetInnerHTML={{ __html: marked.parse(metaData.summary)}} />
+
                 </section>
                 )}
             </main>

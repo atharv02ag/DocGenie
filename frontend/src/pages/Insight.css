@@ -1,14 +1,13 @@
 .view-container {
   display: flex;
   min-height: 100vh;
-  background-color: #f8fafc;
+  background-color: #E9F1FA;
   font-family: sans-serif;
 }
 
 /* Sidebar */
 .sidebar {
   width: 220px;
-  background-color: #1f2937;
   color: white;
   display: flex;
   flex-direction: column;
@@ -37,11 +36,6 @@
   width: 100%;
   text-align: center;
   transition: background 0.3s;
-}
-
-.sidebar-link:hover {
-  background-color: #374151;
-  color: white;
 }
 
 .pdf-viewer-container {
@@ -103,7 +97,9 @@
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
   padding: 30px;
-  transition: box-shadow 0.3s ease;
+  min-height: 90vh;
+  min-width: 110vh
+
 }
 
 .summary-section:hover {
