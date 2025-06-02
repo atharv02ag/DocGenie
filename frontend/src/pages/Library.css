@@ -1,5 +1,4 @@
 
-/* File: LibraryPage.css */
 .library-page {
   display: flex;
   height: 100vh;
@@ -18,9 +17,9 @@
 }
 
 .sidebar-header h2 {
-  margin: 0 0 24px;
-  font-size: 18px;
-  line-height: 1.3;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
   color: #ffffff;
 }
 

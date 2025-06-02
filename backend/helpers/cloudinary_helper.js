@@ -15,4 +15,10 @@ async function handleUpload(file) {
   return res;
 }
 
-module.exports = handleUpload;
+async function handleDelete(publicId) {
+  await cloudinary.uploader.destroy(publicId, {invalidate : true} , (error, result)=>{
+    console.log(result, error);
+  });
+}
+
+module.exports = {handleUpload, handleDelete};
