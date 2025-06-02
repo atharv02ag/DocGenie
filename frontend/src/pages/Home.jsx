@@ -83,7 +83,7 @@ export default function Home() {
                 </Avatar>
              </DropdownMenuTrigger>
              <DropdownMenuContent>
-                 <DropdownMenuItem>Profile</DropdownMenuItem>
+                 <DropdownMenuItem><Link to='/Profile'>Profile</Link></DropdownMenuItem>
                  <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
              </DropdownMenuContent>
              </DropdownMenu> 

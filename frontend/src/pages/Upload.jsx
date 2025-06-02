@@ -63,7 +63,7 @@ export default function Upload({setErrorCode,setErrorMsg, errorCode}) {
         <Link to='/'><div className="sidebar-logo">DocGenie</div></Link>
         <nav className="sidebar-nav">
           <Link to = "/Library" className="sidebar-link">📚 Library</Link>
-          <Link to="/profile" className="sidebar-link">👤 Profile</Link>
+          <Link to="/Profile" className="sidebar-link">👤 Profile</Link>
         </nav>
       </aside>
 

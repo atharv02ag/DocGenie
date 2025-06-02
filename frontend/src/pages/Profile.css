@@ -1,0 +1,145 @@
+.profile-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #e9f1fa;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.sidebar {
+  width: 175px !important;
+  padding: 2rem 1.5rem;
+  background: linear-gradient(to bottom, #252d32, #191e21);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.sidebar-logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  color: #ffffff;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sidebar-link {
+  color: #e2e8f0;
+  text-decoration: none;
+  font-size: 1.1rem;
+  transition: color 0.2s;
+  border-radius: 0.75rem !important;
+  padding: 0.6rem 1rem !important;
+}
+
+.sidebar-link:hover {
+  background: linear-gradient(to right, #e9f1fa, #e9f1fa); 
+  color:#252d32 !important;
+  border-radius: 0.75rem;
+  padding: 0.6rem 1rem;
+  transform: scale(1.03);
+  box-shadow: 0 6px 24px rgba(201, 203, 204, 0.5);
+  transition: all 0.2s ease-in-out;
+}
+
+.main-profile {
+  flex: 1;
+  background-color: #eaf0ff;
+  display: flex;
+  height: 100vh;
+  justify-content: center;
+  align-items: center;
+}
+
+.profile-card {
+  background-color: #ffffff;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  text-align: left;
+  width: 300px;
+  font-family: Arial, sans-serif;
+}
+
+.profile-avatar {
+  display: block;
+  margin: 0 auto 16px auto;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+}
+
+.profile-name {
+  text-align: center;
+  margin-bottom: 16px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.profile-papers-shared {
+  margin-top: 20px;
+}
+
+.profile-papers-shared h3 {
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: #1f2937;
+}
+
+.profile-papers-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.profile-paper-item {
+  background-color: #f3f4f6;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+ .delete-button {
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s;
+}
+
+.logout-wrapper{
+  padding-top : 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.logout-button {
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 18px;
+  transition: background-color 0.2s;
+}
+
+.delete-button:hover {
+  background-color: #dc2626;
+}
+
+.logout-button:hover {
+  background-color: #dc2626;
+}

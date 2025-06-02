@@ -24,10 +24,10 @@ router.get('/:id',async(req,res)=>{
         const cloudinaryUrl = paper.path;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ error: 'Invalid MongoDB ObjectId format' });
+            throw new Error('Invalid MongoDB ObjectId format');
         }
         if (!cloudinaryUrl || !cloudinaryUrl.startsWith('http')) {
-            return res.status(400).json({ error: 'Invalid or missing Cloudinary URL' });
+            throw new Error('Invalid or missing Cloudinary URL');
         }
         const pdfResponse = await axios.get(cloudinaryUrl, { responseType: 'stream' });
         //console.log(pdfResponse);
@@ -58,11 +58,10 @@ router.get('/:id',async(req,res)=>{
         : ${fullText}`;
         const result=await Model.generateContent(prompt);
         summary=result.response.text();
-        console.log(summary)
         res.json({ summary });
         
     }catch(err){
-        console.log(err.message);
+        res.status(400).send(err);
     }
 })
 

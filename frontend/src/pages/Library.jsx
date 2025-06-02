@@ -5,7 +5,7 @@ import './Library.css';
 
 const serverURL = import.meta.env.VITE_SERVER_PATH;
 
-export default function Library({setErrorMsg, setErrorCode, errorCode}) {
+export default function Library({ setErrorMsg, setErrorCode, errorCode }) {
   const [searchText, setSearchText] = useState('');
   const [sortBy, setSortBy] = useState('Date');
   const [activeFilter, setActiveFilter] = useState(null);
@@ -14,25 +14,25 @@ export default function Library({setErrorMsg, setErrorCode, errorCode}) {
   const [filters, setFilters] = useState([]);
   const navigate = useNavigate();
 
-  useEffect(()=>{
-    const fetchData = async()=>{
-      try{
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
         const response = await fetch(`${serverURL}/api/papers`,
           {
-            method : "GET",
-            headers : {
-              "authorization" : `bearer ${localStorage.session}`,
+            method: "GET",
+            headers: {
+              "authorization": `bearer ${localStorage.session}`,
             },
           }
         );
 
-        if(!response.ok){
+        if (!response.ok) {
           const data = await response.json();
           if (data.action === 'REAUTHENTICATE') {
-              setErrorCode(response.status);
+            setErrorCode(response.status);
           }
-          else{
-              setErrorCode(500);
+          else {
+            setErrorCode(500);
           }
           throw new Error(data.error || 'Server Failed');
         }
@@ -42,31 +42,31 @@ export default function Library({setErrorMsg, setErrorCode, errorCode}) {
         const curPaperDocs = data.map((item) => {
           item.tags.forEach(tag => tagSet.add(tag));
           return {
-              id : item._id,
-              title: item.title,
-              tags: item.tags,
-              year: new Date(item.publish_date).getFullYear(),
-              authors: item.authors.join(', '),
-            };
+            id: item._id,
+            title: item.title,
+            tags: item.tags,
+            year: new Date(item.publish_date).getFullYear(),
+            authors: item.authors.join(', '),
+          };
         });
         setPaperDocs(curPaperDocs);
         setFilters(Array.from(tagSet));
       }
-      catch(err){
+      catch (err) {
         setErrorMsg(err.message);
         setPaperDocs([]);
         setFilters([]);
-        navigate('/Error',{replace : true});
+        navigate('/Error', { replace: true });
         console.log(err);
       }
-      
+
     }
 
     fetchData();
 
-  },[])
+  }, [])
 
-  useEffect(()=>{
+  useEffect(() => {
     const curDisplayed = paperDocs
       .filter((paper) =>
         (!activeFilter || paper.tags.includes(activeFilter)) &&
@@ -78,7 +78,7 @@ export default function Library({setErrorMsg, setErrorCode, errorCode}) {
         return b.year - a.year;
       });
     setDisplayed(curDisplayed);
-  },[activeFilter,sortBy,paperDocs])
+  }, [activeFilter, sortBy, paperDocs])
 
   return (
     <div className="library-page">
@@ -111,7 +111,7 @@ export default function Library({setErrorMsg, setErrorCode, errorCode}) {
 
           <label>Filter by</label>
           <div className="filter-buttons">
-            {filters.map((f,index) => (
+            {filters.map((f, index) => (
               <button
                 key={index}
                 className={`btn filter-btn small-filter-btn ${activeFilter === f ? 'active' : ''}`}
@@ -139,27 +139,27 @@ export default function Library({setErrorMsg, setErrorCode, errorCode}) {
           </select>
         </header>
         <div className="column-headers paper-row">
-        <div className="column-title">Title</div>
-        <div className="column-authors">Authors</div>
-        <div className="column-meta">Date / Tags</div>
+          <div className="column-title">Title</div>
+          <div className="column-authors">Authors</div>
+          <div className="column-meta">Date / Tags</div>
         </div>
 
         <section className="paper-list">
           {displayed.map((paper, index) => (
             <Link to={`/View/${paper.id}`}>
-            <div className="paper-item" key={index}>
-              <div className="paper-row">
-                <div className="paper-title">{paper.title}</div>
-                <div className="paper-authors">{paper.authors}</div>
-                <div className="paper-meta">
-                  <span className="year">{paper.year}</span>
-                  {paper.tags.map((tag,index) => (
-                    <span className="tag-pill" key={index}>{tag}</span>
-                  ))}
+              <div className="paper-item" key={index}>
+                <div className="paper-row">
+                  <div className="paper-title">{paper.title}</div>
+                  <div className="paper-authors">{paper.authors}</div>
+                  <div className="paper-meta">
+                    <span className="year">{paper.year}</span>
+                    {paper.tags.map((tag, index) => (
+                      <span className="tag-pill" key={index}>{tag}</span>
+                    ))}
+                  </div>
                 </div>
+                {index !== displayed.length - 1 && <hr />}
               </div>
-              {index !== displayed.length - 1 && <hr />}
-            </div>
             </Link>
           ))}
         </section>
