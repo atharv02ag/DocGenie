@@ -65,4 +65,64 @@ router.get('/:id',async(req,res)=>{
     }
 })
 
+// Temporary in-memory cache (you can use Redis later if needed)
+const pdfCache = new Map();
+
+router.post('/chat/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const userPrompt = req.body.prompt;
+
+        if (!userPrompt || typeof userPrompt !== 'string') {
+            return res.status(400).json({ error: 'Prompt is required and must be a string.' });
+        }
+
+        // Check if we already cached this paper's fullText
+        let fullText = pdfCache.get(id);
+
+        // If not cached, fetch and parse it
+        if (!fullText) {
+            const paper = await papers.findById(id);
+            const cloudinaryUrl = paper.path;
+
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                throw new Error('Invalid MongoDB ObjectId format');
+            }
+            if (!cloudinaryUrl || !cloudinaryUrl.startsWith('http')) {
+                throw new Error('Invalid or missing Cloudinary URL');
+            }
+
+            const pdfResponse = await axios.get(cloudinaryUrl, { responseType: 'stream' });
+            const tempPath = path.join(__dirname, 'temp.pdf');
+
+            const writer = fs.createWriteStream(tempPath);
+            await new Promise((resolve, reject) => {
+                pdfResponse.data.pipe(writer);
+                writer.on('finish', resolve);
+                writer.on('error', reject);
+            });
+
+            const pdfBuffer = await fsPromises.readFile(tempPath);
+            const parsed = await pdfParse(pdfBuffer);
+            fullText = parsed.text;
+
+            // Store in cache
+            pdfCache.set(id, fullText);
+        }
+
+        const prompt = `This is the paper content:\n${fullText}\n\nNow answer the following question from the user:\n"${userPrompt}"`;
+
+        const result = await Model.generateContent(prompt);
+        const responseText = result.response.text();
+
+        res.json({ response: responseText });
+
+    } catch (err) {
+        console.error("Chat error:", err.message);
+        res.status(500).json({ error: 'Failed to generate response' });
+    }
+});
+
+
+
 module.exports = router;

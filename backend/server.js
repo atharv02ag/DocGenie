@@ -13,6 +13,10 @@ const userRoutes = require('./routes/users.js');
 
 const PORT = 8000;
 
+const chatRoute = require("./routes/chat");
+app.use("/api/chat", chatRoute);
+
+
 app.use(cors());
 app.use('/api', authenticate);
 app.use('/api/papers', paperRoutes);

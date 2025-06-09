@@ -8,6 +8,9 @@ require('dotenv').config();
 const storage = multer.memoryStorage();
 const upload = multer(storage);
 const router = express.Router();
+const pdfParse = require("pdf-parse");
+const fs = require("fs");
+const Paper = require("../models/paperModel");
 
 //upload form
 router.post('/', upload.single('file'), async (req, res, next) => {
@@ -27,6 +30,10 @@ router.post('/', upload.single('file'), async (req, res, next) => {
             tags: metadata.keywords.split(','),
             cloudinaryPublicId : cldRes.public_id,
         });
+        const buffer = req.file.buffer;
+        const data = await pdfParse(buffer);
+        newPaper.content = data.text;
+        await newPaper.save();
         console.log('new paper created!');
         const doc = await users.findOne({ googleId: req.user.sub });
         let curUserPapers = [...doc.papers_shared, newPaper._id];
