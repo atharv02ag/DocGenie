@@ -1,21 +1,13 @@
 const express = require('express');
 const papers = require('../models/paperModel');
 const mongoose = require('mongoose');
-const axios = require('axios');
-const pdfParse = require('pdf-parse');
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-const fs = require('fs');
-const fsPromises = require('fs').promises;
-const path = require('path');
+const { GoogleGenAI } = require('@google/genai');
 
 require('dotenv').config();
 
 const router = express.Router();
 const gemini_api_key = process.env.API_KEY;
-const googleAI = new GoogleGenerativeAI(gemini_api_key);
-const Model = googleAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
-});
+const ai = new GoogleGenAI({ apiKey: gemini_api_key });
 
 router.get('/:id',async(req,res)=>{
     try{
@@ -29,22 +21,14 @@ router.get('/:id',async(req,res)=>{
         if (!cloudinaryUrl || !cloudinaryUrl.startsWith('http')) {
             throw new Error('Invalid or missing Cloudinary URL');
         }
-        const pdfResponse = await axios.get(cloudinaryUrl, { responseType: 'stream' });
-        //console.log(pdfResponse);
 
-        const tempPath = path.join(__dirname, 'temp.pdf');
-        console.log(tempPath);
-        const writer = fs.createWriteStream(tempPath);
-            await new Promise((resolve, reject) => {
-              pdfResponse.data.pipe(writer);
-              writer.on('finish', resolve);
-              writer.on('error', reject);
-            });
+        const pdfResponse = await fetch(cloudinaryUrl)
+        .then((response) => response.arrayBuffer());
 
-        const pdfBuffer = await fsPromises.readFile(tempPath);
-        const { text: fullText } = await pdfParse(pdfBuffer);
+        const pdfBuffer = Buffer.from(pdfResponse);
+        const pdfBase64 = pdfBuffer.toString('base64');
 
-        const prompt=`I want you to summarize this text in a well structured manner dont make the summary too small.Generate comprehensive yet 
+        const prompt= `I want you to summarize this text in a well structured manner dont make the summary too small.Generate comprehensive yet 
         concise summary and Identify and highlight key findings, methodologies, and conclusions and present the paper's core contributions clearly.
         Also can you directly make the headings bold from your side. 1:Introduction, 2:Summary divided into paragraphs, 3:highlight key findings,
         methodologies,4:conclusions and present the paper's core contributions clearly, do not violate the order or format.
@@ -54,13 +38,28 @@ router.get('/:id',async(req,res)=>{
         Identify potential issues with citations, statistical methods, or experimental design.
         leave a line after every paragraph and new heading.
         Use <br>  wherever you need to leave a line.
-        DO NOT FORGET THE <br>.
-        : ${fullText}`;
-        const result=await Model.generateContent(prompt);
-        summary=result.response.text();
+        DO NOT FORGET THE <br>.`;
+
+        const contents = [{
+            text : prompt
+        },
+        {
+            inlineData: {
+                mimeType: 'application/pdf',
+                data: pdfBase64,
+            }
+        }];
+
+        const result = await ai.models.generateContent({
+            model: "gemini-1.5-flash", 
+            contents : contents
+        });
+
+        const summary = result.text;
         res.json({ summary });
         
     }catch(err){
+        console.log(err);
         res.status(400).send(err);
     }
 })

@@ -2,7 +2,7 @@
   "dependencies": {
     "@google-cloud/aiplatform": "^4.2.0",
     "@google-cloud/vertexai": "^1.10.0",
-    "@google/generative-ai": "^0.24.1",
+    "@google/genai": "^1.4.0",
     "axios": "^1.9.0",
     "cloudinary": "^2.6.1",
     "cors": "^2.8.5",
