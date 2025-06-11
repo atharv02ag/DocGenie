@@ -23,7 +23,7 @@ const paperSchema = new mongoose.Schema({
     cloudinaryPublicId : {
         type : String,
         required : true,
-    }
+    },
 },{timestamps : true});
 
 module.exports = mongoose.model('Papers', paperSchema);
