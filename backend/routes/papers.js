@@ -1,16 +1,24 @@
-const express = require('express');
-const multer = require('multer');
-const papers = require('../models/paperModel');
-const users = require('../models/userModel');
-const {handleUpload, handleDelete} = require('../helpers/cloudinary_helper');
-require('dotenv').config();
+// const express = require('express');
+// const multer = require('multer');
+// const papers = require('../models/paperModel');
+// const users = require('../models/userModel');
+// const {handleUpload, handleDelete} = require('../helpers/cloudinary_helper');
+// require('dotenv').config();
+import express from 'express';
+import multer from 'multer';
+import papers from '../models/paperModel.js';
+import users from '../models/userModel.js';
+import { handleUpload, handleDelete } from '../helpers/cloudinary_helper.js';
+import fs from 'fs/promises';
+import {join, resolve} from 'path';
+
+import dotenv from 'dotenv';
+dotenv.config({ path: './.env' });
 
 const storage = multer.memoryStorage();
 const upload = multer(storage);
 const router = express.Router();
-const pdfParse = require("pdf-parse");
-const fs = require("fs");
-const Paper = require("../models/paperModel");
+const indexPath = resolve("./faiss_data");
 
 //upload form
 router.post('/', upload.single('file'), async (req, res, next) => {
@@ -30,10 +38,6 @@ router.post('/', upload.single('file'), async (req, res, next) => {
             tags: metadata.keywords.split(','),
             cloudinaryPublicId : cldRes.public_id,
         });
-        const buffer = req.file.buffer;
-        const data = await pdfParse(buffer);
-        newPaper.content = data.text;
-        await newPaper.save();
         console.log('new paper created!');
         const doc = await users.findOne({ googleId: req.user.sub });
         let curUserPapers = [...doc.papers_shared, newPaper._id];
@@ -78,7 +82,8 @@ router.delete('/:id', async (req,res) => {
         let curUserPapers = doc.papers_shared.filter((item) => item != id);
         console.log(curUserPapers);
         await users.updateOne({ googleId: req.user.sub }, { papers_shared: curUserPapers });
-
+        const curPaperFaiss = join(indexPath,id);
+        await fs.rm(curPaperFaiss, { recursive: true, force: true });
         res.status(200).send("delete successfull");
     }
     catch(err){
@@ -86,4 +91,4 @@ router.delete('/:id', async (req,res) => {
     }
 })
 
-module.exports = router;
+export default router;

@@ -10,8 +10,6 @@ export default function Insight({ setErrorCode, setErrorMsg, errorCode }) {
     const { id } = useParams();
     const [metaData, setMetaData] = useState('');
     const [info, setinfo] = useState('');
-    const [chatPrompt, setChatPrompt] = useState('');
-    const [chatHistory, setChatHistory] = useState([]);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -76,35 +74,16 @@ export default function Insight({ setErrorCode, setErrorMsg, errorCode }) {
         fetchData();
     }, []);
 
-    const handleChat = async () => {
-        if (!chatPrompt.trim()) return;
-
-        try {
-            const response = await fetch(`${serverURL}/api/insights/chat/${id}`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "authorization": `bearer ${localStorage.session}`,
-                },
-                body: JSON.stringify({ prompt: chatPrompt }),
-            });
-
-            const data = await response.json();
-            setChatHistory(prev => [...prev, { question: chatPrompt, answer: data.response }]);
-            setChatPrompt('');
-        } catch (err) {
-            console.error("Chat request failed:", err);
-        }
-    };
-
     return (
-        <div className="view-container">
+        <div className="insight-container">
             <aside className="sidebar">
                 <Link to='/'><div className="sidebar-logo">DocGenie</div></Link>
                 <nav className="sidebar-nav">
                     <Link to="/Library" className="sidebar-link">📚 Library</Link>
                     <Link to="/Profile" className="sidebar-link">👤 Profile</Link>
+                    <Link to={`/View/${id}`} className="sidebar-link">View Paper</Link>
                     <Link to={`/Insight/${id}`} className="sidebar-link">Generate Insights</Link>
+                    <Link to={`/Chat/${id}`} className="sidebar-link">Ask Questions</Link>
                 </nav>
             </aside>
             <main className="insight-main">
@@ -119,25 +98,6 @@ export default function Insight({ setErrorCode, setErrorMsg, errorCode }) {
                         <div dangerouslySetInnerHTML={{ __html: marked.parse(metaData.summary) }} />
                     </section>
                 )}
-
-                <section className="chat-section">
-                    <h3>Ask questions about this paper:</h3>
-                    <div className="chat-box">
-                        {chatHistory.map((item, index) => (
-                            <div key={index}>
-                                <strong>You:</strong> {item.question}<br />
-                                <strong>AI:</strong> {item.answer}<br /><br />
-                            </div>
-                        ))}
-                    </div>
-                    <input
-                        type="text"
-                        value={chatPrompt}
-                        onChange={(e) => setChatPrompt(e.target.value)}
-                        placeholder="Ask something..."
-                    />
-                    <button onClick={handleChat}>Send</button>
-                </section>
             </main>
         </div>
     );

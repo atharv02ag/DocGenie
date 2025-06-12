@@ -1,8 +1,11 @@
-const express = require('express');
-const users = require('../models/userModel.js');
+// const express = require('express');
+// const users = require('../models/userModel.js');
+import express from 'express';
+import users from '../models/userModel.js';
 
 const router = express.Router();
 
+//get currently logged in user (passed on to the request)
 router.get('/',async(req,res)=>{
     const id = req.user.sub;
     try{
@@ -14,4 +17,4 @@ router.get('/',async(req,res)=>{
     }
 })
 
-module.exports = router;
+export default router;

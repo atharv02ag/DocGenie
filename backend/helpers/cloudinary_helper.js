@@ -1,5 +1,8 @@
-const cloudinary = require("cloudinary").v2;
-require('dotenv').config();
+// const cloudinary = require("cloudinary").v2;
+// require('dotenv').config();
+import {v2 as cloudinary} from 'cloudinary';
+import dotenv from 'dotenv';
+dotenv.config({ path: './.env' });
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -21,4 +24,4 @@ async function handleDelete(publicId) {
   });
 }
 
-module.exports = {handleUpload, handleDelete};
+export {handleUpload, handleDelete};

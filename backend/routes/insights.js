@@ -1,38 +1,51 @@
-const express = require('express');
-const papers = require('../models/paperModel');
-const mongoose = require('mongoose');
-const { GoogleGenAI } = require('@google/genai');
-
-require('dotenv').config();
+import express from 'express';
+import mongoose from 'mongoose';
+import papers from '../models/paperModel.js';
+import {GoogleGenAI} from '@google/genai';
+import pdf from 'pdf-parse/lib/pdf-parse.js';
+import dotenv from 'dotenv';
+import {join, resolve} from 'path';
+import fs from 'fs';
+import { storeTextInVectorDB, retrieveDocs, loadVectorStoreIfExists } from '../helpers/vector_store.js';
+dotenv.config({ path: './.env' });
 
 const router = express.Router();
-const gemini_api_key = process.env.API_KEY;
+const gemini_api_key = process.env.GEMINI_API_KEY;
 const ai = new GoogleGenAI({ apiKey: gemini_api_key });
+
+const indexPath = resolve("./faiss_data");
 
 router.get('/:id',async(req,res)=>{
     try{
         const id = req.params.id;
-        const paper = await papers.findById(id);
-        const cloudinaryUrl = paper.path;
+        
+        const success = await loadVectorStoreIfExists(id);
 
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            throw new Error('Invalid MongoDB ObjectId format');
+        if(!success){
+
+            const paper = await papers.findById(id);
+            const cloudinaryUrl = paper.path;
+
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                throw new Error('Invalid MongoDB ObjectId format');
+            }
+            if (!cloudinaryUrl || !cloudinaryUrl.startsWith('http')) {
+                throw new Error('Invalid or missing Cloudinary URL');
+            }
+    
+            const pdfResponse = await fetch(cloudinaryUrl)
+            .then((response) => response.arrayBuffer());
+
+            const pdfParsed = await pdf(pdfResponse);
+
+            await storeTextInVectorDB(pdfParsed.text,id);
         }
-        if (!cloudinaryUrl || !cloudinaryUrl.startsWith('http')) {
-            throw new Error('Invalid or missing Cloudinary URL');
-        }
-
-        const pdfResponse = await fetch(cloudinaryUrl)
-        .then((response) => response.arrayBuffer());
-
-        const pdfBuffer = Buffer.from(pdfResponse);
-        const pdfBase64 = pdfBuffer.toString('base64');
 
         const prompt= `I want you to summarize this text in a well structured manner dont make the summary too small.Generate comprehensive yet 
         concise summary and Identify and highlight key findings, methodologies, and conclusions and present the paper's core contributions clearly.
         Also can you directly make the headings bold from your side. 1:Introduction, 2:Summary divided into paragraphs, 3:highlight key findings,
         methodologies,4:conclusions and present the paper's core contributions clearly, do not violate the order or format.
-        After writing the summary, Score papers based on multiple factors (writing quality, methodology, adherence to academic standards)
+        After writing the summary, Score papers based on multiple factors (writing quality, methodology, adherence to academic standards) each on a score out of 10
         Provide detailed feedback on areas of improvement
         Suggest specific changes to enhance the paper's quality
         Identify potential issues with citations, statistical methods, or experimental design.
@@ -40,19 +53,19 @@ router.get('/:id',async(req,res)=>{
         Use <br>  wherever you need to leave a line.
         DO NOT FORGET THE <br>.`;
 
-        const contents = [{
-            text : prompt
-        },
-        {
-            inlineData: {
-                mimeType: 'application/pdf',
-                data: pdfBase64,
-            }
-        }];
+        const curPaperPath = join(indexPath,id,'docstore.json');
+        const data = JSON.parse(fs.readFileSync(curPaperPath, 'utf-8'));
+        let context = '';
+        data[0].forEach((item)=>{
+            context = context + item[1].pageContent;
+        });
+        context = context.replace(/\n/g, ' ');
+
+        const contents = `Use the following context to answer:\n${context} Question: ${prompt}`;
 
         const result = await ai.models.generateContent({
-            model: "gemini-1.5-flash", 
-            contents : contents
+            model : "gemini-1.5-flash",
+            contents : contents,
         });
 
         const summary = result.text;
@@ -64,23 +77,12 @@ router.get('/:id',async(req,res)=>{
     }
 })
 
-// Temporary in-memory cache (you can use Redis later if needed)
-const pdfCache = new Map();
-
-router.post('/chat/:id', async (req, res) => {
-    try {
-        const id = req.params.id;
-        const userPrompt = req.body.prompt;
-
-        if (!userPrompt || typeof userPrompt !== 'string') {
-            return res.status(400).json({ error: 'Prompt is required and must be a string.' });
-        }
-
-        // Check if we already cached this paper's fullText
-        let fullText = pdfCache.get(id);
-
-        // If not cached, fetch and parse it
-        if (!fullText) {
+router.post('/:id',express.text(), async (req,res)=>{
+    const id = req.params.id;
+    const question = req.body;
+    try{
+        const success = await loadVectorStoreIfExists(id);
+        if(!success){
             const paper = await papers.findById(id);
             const cloudinaryUrl = paper.path;
 
@@ -90,38 +92,39 @@ router.post('/chat/:id', async (req, res) => {
             if (!cloudinaryUrl || !cloudinaryUrl.startsWith('http')) {
                 throw new Error('Invalid or missing Cloudinary URL');
             }
+    
+            const pdfResponse = await fetch(cloudinaryUrl)
+            .then((response) => response.arrayBuffer());
 
-            const pdfResponse = await axios.get(cloudinaryUrl, { responseType: 'stream' });
-            const tempPath = path.join(__dirname, 'temp.pdf');
+            const pdfParsed = await pdf(pdfResponse);
 
-            const writer = fs.createWriteStream(tempPath);
-            await new Promise((resolve, reject) => {
-                pdfResponse.data.pipe(writer);
-                writer.on('finish', resolve);
-                writer.on('error', reject);
-            });
-
-            const pdfBuffer = await fsPromises.readFile(tempPath);
-            const parsed = await pdfParse(pdfBuffer);
-            fullText = parsed.text;
-
-            // Store in cache
-            pdfCache.set(id, fullText);
+            await storeTextInVectorDB(pdfParsed.text,id);
         }
 
-        const prompt = `This is the paper content:\n${fullText}\n\nNow answer the following question from the user:\n"${userPrompt}"`;
+        const contextObj = await retrieveDocs(question);
+        let context = '';
+        contextObj.forEach((item)=>{
+            context = context + item.pageContent;
+        })
+        context = context.replace(/\n/g, ' ');
 
-        const result = await Model.generateContent(prompt);
-        const responseText = result.response.text();
+        const prompt = `Use the following context to answer the question. 
+        You may use knowledge of your own to answer in detail, but stick to the context provided.
+        Dont exceed 6 sentences:\n\n${context}\nQuestion: ${question}`;
+        
+        const result = await ai.models.generateContent({
+            model : "gemini-1.5-flash",
+            contents : prompt,
+        });
 
-        res.json({ response: responseText });
+        const answer = result.text;
+        res.json({ answer });
 
-    } catch (err) {
-        console.error("Chat error:", err.message);
-        res.status(500).json({ error: 'Failed to generate response' });
     }
-});
+    catch(err){
+        console.log(err);
+        res.status(400).send(err);
+    }
+})
 
-
-
-module.exports = router;
+export default router;

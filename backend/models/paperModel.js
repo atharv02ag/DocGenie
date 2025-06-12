@@ -1,4 +1,6 @@
-const mongoose = require('mongoose');
+// const mongoose = require('mongoose');
+
+import mongoose from 'mongoose';
 
 const paperSchema = new mongoose.Schema({
     title : {
@@ -26,4 +28,5 @@ const paperSchema = new mongoose.Schema({
     },
 },{timestamps : true});
 
-module.exports = mongoose.model('Papers', paperSchema);
+// module.exports = mongoose.model('Papers', paperSchema);
+export default mongoose.model('Papers', paperSchema);

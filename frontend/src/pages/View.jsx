@@ -67,7 +67,9 @@ export default function View({setErrorCode,setErrorMsg,errorCode}) {
                 <nav className="sidebar-nav">
                     <Link to = "/Library" className="sidebar-link">📚 Library</Link>
                     <Link to="/Profile" className="sidebar-link">👤 Profile</Link>
+                    <Link to={`/View/${id}`} className="sidebar-link">View Paper</Link>
                     <Link to={`/Insight/${id}`} className="sidebar-link">Generate Insights</Link>
+                    <Link to={`/Chat/${id}`} className="sidebar-link">Ask Questions</Link>
                 </nav>
             </aside>
             <main className="pdf-viewer-container">
