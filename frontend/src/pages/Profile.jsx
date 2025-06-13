@@ -144,7 +144,7 @@ export default function Profile({ setErrorCode, setErrorMsg, errorCode }) {
             </ul>
           </div>
           <div className="logout-wrapper">
-            <button className="logout-button" onClick={ handleLogout }>Log Out</button>
+            <button className="logout-button" onClick={ handleLogout }>Sign Out</button>
           </div>
           
 

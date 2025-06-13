@@ -84,7 +84,7 @@ export default function Home() {
              </DropdownMenuTrigger>
              <DropdownMenuContent>
                  <DropdownMenuItem><Link to='/Profile'>Profile</Link></DropdownMenuItem>
-                 <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+                 <DropdownMenuItem onClick={handleLogout}>Sign Out</DropdownMenuItem>
              </DropdownMenuContent>
              </DropdownMenu> 
         )
@@ -124,8 +124,7 @@ export default function Home() {
             <div className="app-container">
                 <header className="header">
                     <div className="logo">
-                        <div className="logo-icon">R</div>
-                        <span>LOGO</span>
+                        <span>DocGenie</span>
                     </div>
                     <nav className="nav">
                         <Link to="/">Home</Link>
