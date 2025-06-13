@@ -10,6 +10,7 @@ import Insight from './pages/Insight.jsx'
 import Error from './pages/Error.jsx'
 import Profile from './pages/Profile.jsx'
 import ProtectedRoutes from './lib/ProtectedRoutes.jsx'
+import Chat from './pages/Chat.jsx';
 
 function App() {
 
@@ -41,6 +42,10 @@ function App() {
               <Route
                 path='/Insight/:id'
                 element={<Insight setErrorMsg = {setErrorMsg} setErrorCode = {setErrorCode} errorCode = {errorCode}/>}
+              />
+              <Route
+                path='/Chat/:id'
+                element={<Chat setErrorMsg = {setErrorMsg} setErrorCode = {setErrorCode} errorCode = {errorCode}/>}
               />
               <Route 
                 path='/Profile'

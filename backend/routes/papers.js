@@ -1,13 +1,24 @@
-const express = require('express');
-const multer = require('multer');
-const papers = require('../models/paperModel');
-const users = require('../models/userModel');
-const {handleUpload, handleDelete} = require('../helpers/cloudinary_helper');
-require('dotenv').config();
+// const express = require('express');
+// const multer = require('multer');
+// const papers = require('../models/paperModel');
+// const users = require('../models/userModel');
+// const {handleUpload, handleDelete} = require('../helpers/cloudinary_helper');
+// require('dotenv').config();
+import express from 'express';
+import multer from 'multer';
+import papers from '../models/paperModel.js';
+import users from '../models/userModel.js';
+import { handleUpload, handleDelete } from '../helpers/cloudinary_helper.js';
+import fs from 'fs/promises';
+import {join, resolve} from 'path';
+
+import dotenv from 'dotenv';
+dotenv.config({ path: './.env' });
 
 const storage = multer.memoryStorage();
 const upload = multer(storage);
 const router = express.Router();
+const indexPath = resolve("./faiss_data");
 
 //upload form
 router.post('/', upload.single('file'), async (req, res, next) => {
@@ -71,7 +82,8 @@ router.delete('/:id', async (req,res) => {
         let curUserPapers = doc.papers_shared.filter((item) => item != id);
         console.log(curUserPapers);
         await users.updateOne({ googleId: req.user.sub }, { papers_shared: curUserPapers });
-
+        const curPaperFaiss = join(indexPath,id);
+        await fs.rm(curPaperFaiss, { recursive: true, force: true });
         res.status(200).send("delete successfull");
     }
     catch(err){
@@ -79,4 +91,4 @@ router.delete('/:id', async (req,res) => {
     }
 })
 
-module.exports = router;
+export default router;

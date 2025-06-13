@@ -78,7 +78,7 @@ export default function Library({ setErrorMsg, setErrorCode, errorCode }) {
         return b.year - a.year;
       });
     setDisplayed(curDisplayed);
-  }, [activeFilter, sortBy, paperDocs])
+  }, [activeFilter, sortBy, paperDocs, searchText])
 
   return (
     <div className="library-page">

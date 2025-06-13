@@ -1,7 +1,10 @@
-const jwt = require('jsonwebtoken');
-require("dotenv").config();
+// const jwt = require('jsonwebtoken');
+// require("dotenv").config();
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+dotenv.config({ path: './.env' });
 
-function authenticate(req, res, next) {
+export default function authenticate(req, res, next) {
     const authHeader = req.headers['authorization'];
 
     //session token sent as header authorization : bearer <token>
@@ -28,5 +31,3 @@ function authenticate(req, res, next) {
         next();
     });
 }
-
-module.exports = authenticate;

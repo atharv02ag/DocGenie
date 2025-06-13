@@ -1,8 +1,15 @@
-const { OAuth2Client } = require('google-auth-library');
-const jwt = require('jsonwebtoken');
-const express = require('express');
-const users = require('../models/userModel.js');
-require('dotenv').config();
+// const { OAuth2Client } = require('google-auth-library');
+// const jwt = require('jsonwebtoken');
+// const express = require('express');
+// const users = require('../models/userModel.js');
+
+import { OAuth2Client } from 'google-auth-library';
+import jwt from 'jsonwebtoken';
+import express from 'express';
+import users from '../models/userModel.js';
+
+import dotenv from 'dotenv';
+dotenv.config({ path: './.env' });
 
 const router = express.Router();
 
@@ -28,8 +35,6 @@ router.post('/', async (req, res) => {
 
         const user = await users.findOne({ googleId: payload.sub });
 
-        console.log(user);
-
         if (!user) {
             const newUser = await users.create({
                 googleId: payload.sub,
@@ -53,4 +58,4 @@ router.post('/', async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;
