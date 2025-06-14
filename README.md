@@ -8,7 +8,7 @@ DocGenie is an intelligent research paper management system that allows users to
 
 [Watch the demo](https://www.youtube.com/watch?v=UqC96p1uJJg)
 
---
+---
 
 ## Technologies used
 
