@@ -1,4 +1,4 @@
 node_modules
+faiss_data
 
 *.env
-temp.pdf

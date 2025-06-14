@@ -4,6 +4,12 @@ DocGenie is an intelligent research paper management system that allows users to
 
 ---
 
+## Demo
+
+
+
+--
+
 ## Technologies used
 
 - Node and Express for backend logic and managing API routes

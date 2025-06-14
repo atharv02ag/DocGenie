@@ -153,8 +153,8 @@ export default function Library({ setErrorMsg, setErrorCode, errorCode }) {
                   <div className="paper-authors">{paper.authors}</div>
                   <div className="paper-meta">
                     <span className="year">{paper.year}</span>
-                    {paper.tags.map((tag, index) => (
-                      <span className="tag-pill" key={index}>{tag}</span>
+                    {paper.tags.map((tag, index2) => (
+                      <span className="tag-pill" key={index2}>{tag}</span>
                     ))}
                   </div>
                 </div>

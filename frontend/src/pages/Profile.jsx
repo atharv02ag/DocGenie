@@ -16,6 +16,7 @@ export default function Profile({ setErrorCode, setErrorMsg, errorCode }) {
   const navigate = useNavigate();
 
   const [paperList, setPaperList] = useState([]);
+  const [deleteProgress, setDeleteProgress] = useState(0);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -98,15 +99,24 @@ export default function Profile({ setErrorCode, setErrorMsg, errorCode }) {
   }, [])
 
   const deletePaper = async (paperId)=>{
+    setDeleteProgress(1);
     const response = await fetch(`${serverURL}/api/papers/${paperId}`, {
       method : "DELETE",
       headers: {
         "authorization": `bearer ${localStorage.session}`,
       },
     });
-
+    setPaperList((prev) => {
+      let updatedList = [];
+      for(let item of prev){
+        if(item.id != paperId){
+            updatedList = [...updatedList, item];
+        }
+      }
+      return updatedList;
+    })
     console.log(response);
-
+    setDeleteProgress(0);
   }
 
   const handleLogout = ()=>{
@@ -138,7 +148,7 @@ export default function Profile({ setErrorCode, setErrorMsg, errorCode }) {
               {paperList.map((paper, index) => (
                 <li key={index} className="profile-paper-item">
                   {paper.title}
-                  <button className="delete-button" onClick={() => deletePaper(paper.id)}>Delete</button>
+                  <button className={`delete-button ${(deleteProgress) ? "loading" : ""}`} onClick={() => deletePaper(paper.id)}>Delete</button>
                 </li>
               ))}
             </ul>
@@ -146,8 +156,6 @@ export default function Profile({ setErrorCode, setErrorMsg, errorCode }) {
           <div className="logout-wrapper">
             <button className="logout-button" onClick={ handleLogout }>Sign Out</button>
           </div>
-          
-
         </div>
       </div>
 

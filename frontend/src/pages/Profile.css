@@ -119,6 +119,12 @@
   transition: background-color 0.2s;
 }
 
+.delete-button.loading {
+  background-color: #c4c6c9;
+  color: #94a3b8;
+  cursor : not-allowed;
+}
+
 .logout-wrapper{
   padding-top : 20px;
   display: flex;
@@ -138,6 +144,12 @@
 
 .delete-button:hover {
   background-color: #dc2626;
+}
+
+.delete-button.loading:hover {
+    background-color: #c4c6c9;
+    color: #94a3b8;
+    cursor : not-allowed;
 }
 
 .logout-button:hover {

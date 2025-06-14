@@ -1,8 +1,3 @@
-// const { OAuth2Client } = require('google-auth-library');
-// const jwt = require('jsonwebtoken');
-// const express = require('express');
-// const users = require('../models/userModel.js');
-
 import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 import express from 'express';

@@ -1,9 +1,3 @@
-// const express = require('express');
-// const multer = require('multer');
-// const papers = require('../models/paperModel');
-// const users = require('../models/userModel');
-// const {handleUpload, handleDelete} = require('../helpers/cloudinary_helper');
-// require('dotenv').config();
 import express from 'express';
 import multer from 'multer';
 import papers from '../models/paperModel.js';
@@ -20,7 +14,7 @@ const upload = multer(storage);
 const router = express.Router();
 const indexPath = resolve("./faiss_data");
 
-//upload form
+//upload form -> send pdf to cloudinary, store metadata in papers and users collection
 router.post('/', upload.single('file'), async (req, res, next) => {
     try {
         const encodedDatab64 = Buffer.from(req.file.buffer).toString("base64");
@@ -70,7 +64,7 @@ router.get('/:id', async (req, res) => {
     }
 })
 
-//delete a single document
+//delete a single document -> also deletes faiss vector store entry and cloudinary link
 router.delete('/:id', async (req,res) => {
     try{
         const id = req.params.id;

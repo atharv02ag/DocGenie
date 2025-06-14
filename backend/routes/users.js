@@ -1,5 +1,3 @@
-// const express = require('express');
-// const users = require('../models/userModel.js');
 import express from 'express';
 import users from '../models/userModel.js';
 

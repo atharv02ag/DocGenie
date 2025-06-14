@@ -37,15 +37,6 @@
   transition: background 0.3s;
 }
 
-.pdf-viewer-container {
-  flex: 1;
-  padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  background-color: #f1f5f9;
-  overflow-y: auto;
-}
-
 .insight-main {
   max-width: 800px;
   margin: 0 auto;
@@ -90,7 +81,7 @@
   font-size: 16px;
   line-height: 1.6;
   color: #444;
-  white-space: pre-line; /* preserve newlines */
+  white-space: pre-line; 
 }
 .summary-section h2 {
   text-align: center;

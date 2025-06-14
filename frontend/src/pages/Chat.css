@@ -109,7 +109,7 @@
   font-size: 16px;
   line-height: 1.6;
   color: #444;
-  white-space: pre-line; /* preserve newlines */
+  white-space: pre-line; 
 }
 .answer-section h2 {
   text-align: center;

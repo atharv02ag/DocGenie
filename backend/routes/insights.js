@@ -36,9 +36,15 @@ router.get('/:id',async(req,res)=>{
             const pdfResponse = await fetch(cloudinaryUrl)
             .then((response) => response.arrayBuffer());
 
+            console.log("pdf fetched..");
+
             const pdfParsed = await pdf(pdfResponse);
 
+            console.log("pdf parsed..");
+
             await storeTextInVectorDB(pdfParsed.text,id);
+
+            console.log("pdf stored in vector store..");
         }
 
         const prompt= `I want you to summarize this text in a well structured manner dont make the summary too small.Generate comprehensive yet 
@@ -96,12 +102,23 @@ router.post('/:id',express.text(), async (req,res)=>{
             const pdfResponse = await fetch(cloudinaryUrl)
             .then((response) => response.arrayBuffer());
 
+            console.log("pdf fetched...")
+
             const pdfParsed = await pdf(pdfResponse);
 
+            console.log("pdf parsed...");
+
             await storeTextInVectorDB(pdfParsed.text,id);
+
+            console.log("pdf stored in vector store..");
         }
 
+        await loadVectorStoreIfExists(id);
+
         const contextObj = await retrieveDocs(question);
+
+        console.log("received relevent embeddings..");
+
         let context = '';
         contextObj.forEach((item)=>{
             context = context + item.pageContent;

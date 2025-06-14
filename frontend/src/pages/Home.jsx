@@ -109,6 +109,7 @@ export default function Home() {
 
         if (savedToken && savedUser) {
             const userInfoData = JSON.parse(savedUser);
+            console.log(userInfoData);
             setProfilePic(userInfoData.picture);
             setLoggedIn(1);
         }

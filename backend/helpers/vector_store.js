@@ -39,7 +39,7 @@ async function loadVectorStoreIfExists(id) {
     console.log("FAISS vector store loaded from disk.");
     return 1;
   } else {
-    console.log("No FAISS store found. Upload a PDF first.");
+    console.log("No FAISS store found.");
     return 0;
   }
 }
