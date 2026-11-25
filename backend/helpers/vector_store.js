@@ -6,15 +6,17 @@ import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import dotenv from 'dotenv';
 dotenv.config({ path: './.env' });
 
+// "models/embedding-001" was retired by Google; gemini-embedding-001 is its replacement.
+// NOTE: indexes built with the old model are not compatible and must be regenerated.
 const embeddings = new GoogleGenerativeAIEmbeddings({
-  model: "models/embedding-001",
+  model: "gemini-embedding-001",
   apiKey: process.env.GEMINI_API_KEY,
 });
 
 const indexPath = resolve("./faiss_data");
 
-let vectorStore = null;
-
+// Stores are returned to the caller instead of kept in a shared module-level variable,
+// so concurrent requests for different papers can't read each other's store.
 async function storeTextInVectorDB(text,id) {
   const splitter = new RecursiveCharacterTextSplitter({
     chunkSize: 1000,
@@ -22,25 +24,27 @@ async function storeTextInVectorDB(text,id) {
   });
 
   const docs = await splitter.createDocuments([text]);
-  vectorStore = await FaissStore.fromDocuments(docs, embeddings);
+  const vectorStore = await FaissStore.fromDocuments(docs, embeddings);
   const loadPath = join(indexPath, id);
   await vectorStore.save(loadPath);
+  return vectorStore;
 }
 
-async function retrieveDocs(query) {
+async function retrieveDocs(vectorStore, query) {
   if (!vectorStore) throw new Error("Vector store is empty");
   return await vectorStore.similaritySearch(query, 3);
 }
 
+// returns the loaded store, or null if none exists on disk
 async function loadVectorStoreIfExists(id) {
   const loadPath = join(indexPath, id);
   if (fs.existsSync(loadPath)) {
-    vectorStore = await FaissStore.load(loadPath, embeddings);
+    const vectorStore = await FaissStore.load(loadPath, embeddings);
     console.log("FAISS vector store loaded from disk.");
-    return 1;
+    return vectorStore;
   } else {
     console.log("No FAISS store found.");
-    return 0;
+    return null;
   }
 }
 

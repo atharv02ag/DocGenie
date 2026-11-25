@@ -15,37 +15,50 @@ const ai = new GoogleGenAI({ apiKey: gemini_api_key });
 
 const indexPath = resolve("./faiss_data");
 
+// gemini-1.5-flash was retired; override with GEMINI_MODEL in .env if needed
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
+
+// loads the paper's vector store from disk, or builds it from the PDF on cloudinary
+async function getVectorStore(id) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new Error('Invalid MongoDB ObjectId format');
+    }
+
+    const existing = await loadVectorStoreIfExists(id);
+    if (existing) return existing;
+
+    const paper = await papers.findById(id);
+    if (!paper) {
+        throw new Error('Paper not found');
+    }
+    const cloudinaryUrl = paper.path;
+    if (!cloudinaryUrl || !cloudinaryUrl.startsWith('http')) {
+        throw new Error('Invalid or missing Cloudinary URL');
+    }
+
+    const response = await fetch(cloudinaryUrl);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch PDF (${response.status})`);
+    }
+    const pdfBuffer = Buffer.from(await response.arrayBuffer());
+
+    console.log("pdf fetched..");
+
+    const pdfParsed = await pdf(pdfBuffer);
+
+    console.log("pdf parsed..");
+
+    const vectorStore = await storeTextInVectorDB(pdfParsed.text,id);
+
+    console.log("pdf stored in vector store..");
+    return vectorStore;
+}
+
 router.get('/:id',async(req,res)=>{
     try{
         const id = req.params.id;
         
-        const success = await loadVectorStoreIfExists(id);
-
-        if(!success){
-
-            const paper = await papers.findById(id);
-            const cloudinaryUrl = paper.path;
-
-            if (!mongoose.Types.ObjectId.isValid(id)) {
-                throw new Error('Invalid MongoDB ObjectId format');
-            }
-            if (!cloudinaryUrl || !cloudinaryUrl.startsWith('http')) {
-                throw new Error('Invalid or missing Cloudinary URL');
-            }
-    
-            const pdfResponse = await fetch(cloudinaryUrl)
-            .then((response) => response.arrayBuffer());
-
-            console.log("pdf fetched..");
-
-            const pdfParsed = await pdf(pdfResponse);
-
-            console.log("pdf parsed..");
-
-            await storeTextInVectorDB(pdfParsed.text,id);
-
-            console.log("pdf stored in vector store..");
-        }
+        await getVectorStore(id);
 
         const prompt= `I want you to summarize this text in a well structured manner dont make the summary too small.Generate comprehensive yet 
         concise summary and Identify and highlight key findings, methodologies, and conclusions and present the paper's core contributions clearly.
@@ -70,7 +83,7 @@ router.get('/:id',async(req,res)=>{
         const contents = `Use the following context to answer:\n${context} Question: ${prompt}`;
 
         const result = await ai.models.generateContent({
-            model : "gemini-1.5-flash",
+            model : GEMINI_MODEL,
             contents : contents,
         });
 
@@ -79,7 +92,7 @@ router.get('/:id',async(req,res)=>{
         
     }catch(err){
         console.log(err);
-        res.status(400).send(err);
+        res.status(400).send(err.message);
     }
 })
 
@@ -87,35 +100,9 @@ router.post('/:id',express.text(), async (req,res)=>{
     const id = req.params.id;
     const question = req.body;
     try{
-        const success = await loadVectorStoreIfExists(id);
-        if(!success){
-            const paper = await papers.findById(id);
-            const cloudinaryUrl = paper.path;
+        const vectorStore = await getVectorStore(id);
 
-            if (!mongoose.Types.ObjectId.isValid(id)) {
-                throw new Error('Invalid MongoDB ObjectId format');
-            }
-            if (!cloudinaryUrl || !cloudinaryUrl.startsWith('http')) {
-                throw new Error('Invalid or missing Cloudinary URL');
-            }
-    
-            const pdfResponse = await fetch(cloudinaryUrl)
-            .then((response) => response.arrayBuffer());
-
-            console.log("pdf fetched...")
-
-            const pdfParsed = await pdf(pdfResponse);
-
-            console.log("pdf parsed...");
-
-            await storeTextInVectorDB(pdfParsed.text,id);
-
-            console.log("pdf stored in vector store..");
-        }
-
-        await loadVectorStoreIfExists(id);
-
-        const contextObj = await retrieveDocs(question);
+        const contextObj = await retrieveDocs(vectorStore, question);
 
         console.log("received relevent embeddings..");
 
@@ -130,7 +117,7 @@ router.post('/:id',express.text(), async (req,res)=>{
         Dont exceed 6 sentences:\n\n${context}\nQuestion: ${question}`;
         
         const result = await ai.models.generateContent({
-            model : "gemini-1.5-flash",
+            model : GEMINI_MODEL,
             contents : prompt,
         });
 
@@ -140,7 +127,7 @@ router.post('/:id',express.text(), async (req,res)=>{
     }
     catch(err){
         console.log(err);
-        res.status(400).send(err);
+        res.status(400).send(err.message);
     }
 })
 

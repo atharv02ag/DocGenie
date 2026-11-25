@@ -11,7 +11,7 @@ router.get('/',async(req,res)=>{
         res.status(200).json(user);
     }
     catch(err){
-        res.status(400).send(err);
+        res.status(400).send(err.message);
     }
 })
 

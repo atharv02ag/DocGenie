@@ -17,9 +17,8 @@ async function handleUpload(file) {
 }
 
 async function handleDelete(publicId) {
-  await cloudinary.uploader.destroy(publicId, {invalidate : true} , (error, result)=>{
-    console.log(result, error);
-  });
+  const result = await cloudinary.uploader.destroy(publicId, {invalidate : true});
+  console.log(result);
 }
 
 export {handleUpload, handleDelete};
