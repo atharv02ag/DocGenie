@@ -35,7 +35,7 @@ router.post('/', upload.single('file'), async (req, res, next) => {
         });
         console.log('new paper created!');
         await users.updateOne({ googleId: req.user.sub }, { $push: { papers_shared: newPaper._id } });
-        res.status(200).send('Paper Uploaded Successfully!')
+        res.status(200).json({ message: 'Paper Uploaded Successfully!', id: newPaper._id });
     }
     catch (err) {
         res.status(400).send(err.message);

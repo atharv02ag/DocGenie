@@ -1,166 +1,145 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { googleLogout } from "@react-oauth/google";
-import './Profile.css';
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { api, useSessionGuard } from "@/lib/api";
+import { clearSession } from "@/lib/session";
+import "./Profile.css";
 
-const serverURL = import.meta.env.VITE_SERVER_PATH;
-
-export default function Profile({ setErrorCode, setErrorMsg, errorCode }) {
-
-  const [user, setUser] = useState({
-    name: '',
-    email: '',
-    picture: '',
-  });
-
+export default function Profile() {
   const navigate = useNavigate();
-
-  const [paperList, setPaperList] = useState([]);
-  const [deleteProgress, setDeleteProgress] = useState(0);
+  const guard = useSessionGuard();
+  const [user, setUser] = useState(null);
+  const [papers, setPapers] = useState([]);
+  const [status, setStatus] = useState("loading");
+  const [confirming, setConfirming] = useState(null);
+  const [deleting, setDeleting] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    let ignore = false;
+    (async () => {
       try {
-        const userInfo = await fetch(`${serverURL}/api/user`, {
-          method: "GET",
-          headers: {
-            "authorization": `bearer ${localStorage.session}`
-          }
-        });
-
-        if (!userInfo.ok) {
-          const data = await userInfo.json();
-          if (data.action === 'REAUTHENTICATE') {
-            setErrorCode(userInfo.status);
-          }
-          else {
-            setErrorCode(500);
-          }
-          throw new Error(data.error || 'Server Failed');
-        }
-
-        const userInfoJson = await userInfo.json();
-        const curUser = {
-          name: userInfoJson.name,
-          email: userInfoJson.email,
-          picture: userInfoJson.picture,
-        };
-
-        setUser(curUser);
-
-        if (userInfoJson.papers_shared) {
-          for (const paperId of userInfoJson.papers_shared) {
-            const response = await fetch(`${serverURL}/api/papers/${paperId}`,
-              {
-                method: "GET",
-                headers: {
-                  "authorization": `bearer ${localStorage.session}`,
-                },
-              }
-            );
-
-            if (!response.ok) {
-              const data = await response.json();
-              if (data.action === 'REAUTHENTICATE') {
-                setErrorCode(response.status);
-              }
-              else {
-                setErrorCode(500);
-              }
-              throw new Error(data.error || 'Server Failed');
-            }
-
-            const item = await response.json();
-
-            setPaperList((prev) => {
-              const combined = [...prev, { title: item.title, id: item._id }];
-
-              const uniqueById = [
-                ...new Map(combined.map(paper => [paper.id, paper])).values()
-              ];
-
-              return uniqueById;
-            });
-
-          }
-        }
+        const me = await api("/api/user");
+        if (!me) throw new Error("account not found");
+        // a paper id can outlive its paper, so skip ones that come back empty or fail
+        const results = await Promise.allSettled(
+          (me.papers_shared || []).map((pid) => api(`/api/papers/${pid}`))
+        );
+        if (ignore) return;
+        setUser(me);
+        setPapers(
+          results
+            .filter((r) => r.status === "fulfilled" && r.value)
+            .map((r) => ({ id: r.value._id, title: r.value.title, date: r.value.createdAt }))
+        );
+        setStatus("ready");
+      } catch (err) {
+        if (ignore || guard(err)) return;
+        setStatus("error");
       }
-      catch (err) {
-        setErrorMsg(err.message);
-        navigate('/Error', { replace: true });
-        console.log(err);
-      }
+    })();
+    return () => {
+      ignore = true;
+    };
+  }, [guard]);
 
+  const deletePaper = async (id) => {
+    setDeleting(id);
+    setDeleteError("");
+    try {
+      await api(`/api/papers/${id}`, { method: "DELETE" });
+      setPapers((prev) => prev.filter((p) => p.id !== id));
+    } catch (err) {
+      if (guard(err)) return;
+      setDeleteError(err.message);
+    } finally {
+      setDeleting(null);
+      setConfirming(null);
     }
+  };
 
-    fetchProfile();
-    console.log(paperList);
+  const signOut = () => {
+    clearSession();
+    navigate("/");
+  };
 
-  }, [])
-
-  const deletePaper = async (paperId)=>{
-    setDeleteProgress(1);
-    const response = await fetch(`${serverURL}/api/papers/${paperId}`, {
-      method : "DELETE",
-      headers: {
-        "authorization": `bearer ${localStorage.session}`,
-      },
-    });
-    setPaperList((prev) => {
-      let updatedList = [];
-      for(let item of prev){
-        if(item.id != paperId){
-            updatedList = [...updatedList, item];
-        }
-      }
-      return updatedList;
-    })
-    console.log(response);
-    setDeleteProgress(0);
-  }
-
-  const handleLogout = ()=>{
-    googleLogout();
-    localStorage.removeItem("session");
-    localStorage.removeItem("user");
-    navigate('/');
+  if (status === "loading") return <div className="page muted">Loading profile…</div>;
+  if (status === "error") {
+    return (
+      <div className="page">
+        <h1 className="page-title">Couldn't load your profile</h1>
+        <p className="muted">Check that the server is running and try again.</p>
+      </div>
+    );
   }
 
   return (
-    <div className="profile-container">
-      <aside className="sidebar">
-        <Link to='/'><div className="sidebar-logo">DocGenie</div></Link>
-        <nav className="sidebar-nav">
-          <Link to="/Library" className="sidebar-link">📚 Library</Link>
-          <Link to="/Profile" className="sidebar-link">👤 Profile</Link>
-        </nav>
-      </aside>
-
-      <div className="main-profile">
-        <div className="profile-card">
-          <img src={user.picture} alt="Profile" className="profile-avatar" />
-          <h2 className="profile-name">{user.name}</h2>
-          <p><strong>Email :</strong> &nbsp;{user.email}</p>
-
-          <div className="profile-papers-shared">
-            <h3><strong>Papers Shared : {paperList.length === 0 ? "None" : ""}</strong></h3>
-            <ul className="profile-papers-list">
-              {paperList.map((paper, index) => (
-                <li key={index} className="profile-paper-item">
-                  {paper.title}
-                  <button className={`delete-button ${(deleteProgress) ? "loading" : ""}`} onClick={() => deletePaper(paper.id)}>Delete</button>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="logout-wrapper">
-            <button className="logout-button" onClick={ handleLogout }>Sign Out</button>
-          </div>
+    <div className="page page-form">
+      <div className="profile-head">
+        {user.picture && (
+          <img src={user.picture} alt="" className="profile-photo" referrerPolicy="no-referrer" />
+        )}
+        <div>
+          <h1 className="page-title">{user.name}</h1>
+          <p className="muted">{user.email}</p>
         </div>
       </div>
 
+      <section className="profile-section">
+        <h2 className="section-title">Your uploads</h2>
+        {deleteError && <p className="form-error">Couldn't delete: {deleteError}</p>}
+        {papers.length === 0 ? (
+          <p className="muted">
+            You haven't uploaded anything yet.{" "}
+            <Link to="/Upload" className="text-link">Upload a paper</Link>
+          </p>
+        ) : (
+          <ul className="upload-list">
+            {papers.map((p) => (
+              <li key={p.id} className="upload-item">
+                <div className="upload-item-text">
+                  <Link to={`/View/${p.id}`} className="upload-item-title">
+                    {p.title}
+                  </Link>
+                  {p.date && (
+                    <span className="muted small">
+                      Uploaded {new Date(p.date).toLocaleDateString(undefined, { dateStyle: "medium" })}
+                    </span>
+                  )}
+                </div>
+                {confirming === p.id ? (
+                  <div className="confirm">
+                    <span className="small">Delete for everyone?</span>
+                    <button
+                      className="btn btn-danger btn-sm"
+                      onClick={() => deletePaper(p.id)}
+                      disabled={deleting === p.id}
+                    >
+                      {deleting === p.id ? "Deleting…" : "Delete"}
+                    </button>
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => setConfirming(null)}
+                      disabled={deleting === p.id}
+                    >
+                      Keep
+                    </button>
+                  </div>
+                ) : (
+                  <button className="btn btn-ghost btn-sm" onClick={() => setConfirming(p.id)}>
+                    Delete
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="profile-section">
+        <button className="btn btn-secondary" onClick={signOut}>
+          Sign out
+        </button>
+      </section>
     </div>
   );
 }
-
-

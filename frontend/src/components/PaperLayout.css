@@ -1,0 +1,78 @@
+.paper-page {
+  max-width: var(--content);
+  margin: 0 auto;
+  padding: 28px 24px 0;
+}
+
+.back-link {
+  font-size: 13.5px;
+  color: var(--ink-3);
+  text-decoration: none;
+}
+
+.back-link:hover {
+  color: var(--ink);
+}
+
+.paper-head-title {
+  max-width: 860px;
+  margin-top: 14px;
+  font-family: var(--serif);
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+.paper-head-meta {
+  margin-top: 8px;
+  color: var(--ink-2);
+}
+
+.paper-head .tag-list {
+  margin-top: 12px;
+}
+
+.tabs {
+  display: flex;
+  gap: 28px;
+  margin-top: 24px;
+  border-bottom: 1px solid var(--rule);
+  overflow-x: auto;
+}
+
+.tabs a {
+  padding: 10px 0;
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+  font-size: 14.5px;
+  color: var(--ink-3);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.tabs a:hover {
+  color: var(--ink);
+}
+
+.tabs a.active {
+  color: var(--ink);
+  font-weight: 500;
+  border-bottom-color: var(--accent);
+}
+
+.paper-body {
+  padding: 28px 0 56px;
+}
+
+@media (max-width: 640px) {
+  .paper-page {
+    padding: 20px 16px 0;
+  }
+  .paper-head-title {
+    font-size: 25px;
+  }
+  .tabs {
+    gap: 20px;
+  }
+}

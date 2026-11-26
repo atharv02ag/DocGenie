@@ -30,9 +30,12 @@ async function storeTextInVectorDB(text,id) {
   return vectorStore;
 }
 
+// number of ~1000-char chunks given to the model per question
+const CHUNKS_PER_QUERY = 8;
+
 async function retrieveDocs(vectorStore, query) {
   if (!vectorStore) throw new Error("Vector store is empty");
-  return await vectorStore.similaritySearch(query, 3);
+  return await vectorStore.similaritySearch(query, CHUNKS_PER_QUERY);
 }
 
 // returns the loaded store, or null if none exists on disk

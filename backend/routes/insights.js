@@ -17,6 +17,22 @@ const indexPath = resolve("./faiss_data");
 
 // gemini-1.5-flash was retired; override with GEMINI_MODEL in .env if needed
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
+const FALLBACK_MODEL = process.env.GEMINI_FALLBACK_MODEL || "gemini-flash-lite-latest";
+
+// Gemini regularly returns 503 "high demand" / 429 errors; retry once on another model
+// and give the user something readable if that fails too.
+async function generate(contents) {
+    for (const model of [GEMINI_MODEL, FALLBACK_MODEL]) {
+        try {
+            const result = await ai.models.generateContent({ model, contents });
+            return result.text;
+        } catch (err) {
+            if (!/status: (503|429)/.test(err.message)) throw err;
+            console.log(`${model} unavailable, ${model === FALLBACK_MODEL ? 'giving up' : 'trying fallback'}`);
+        }
+    }
+    throw new Error('The AI model is overloaded right now. Please try again in a minute.');
+}
 
 // loads the paper's vector store from disk, or builds it from the PDF on cloudinary
 async function getVectorStore(id) {
@@ -82,12 +98,7 @@ router.get('/:id',async(req,res)=>{
 
         const contents = `Use the following context to answer:\n${context} Question: ${prompt}`;
 
-        const result = await ai.models.generateContent({
-            model : GEMINI_MODEL,
-            contents : contents,
-        });
-
-        const summary = result.text;
+        const summary = await generate(contents);
         res.json({ summary });
         
     }catch(err){
@@ -108,7 +119,7 @@ router.post('/:id',express.text(), async (req,res)=>{
 
         let context = '';
         contextObj.forEach((item)=>{
-            context = context + item.pageContent;
+            context = context + item.pageContent + ' [...] ';
         })
         context = context.replace(/\n/g, ' ');
 
@@ -116,12 +127,7 @@ router.post('/:id',express.text(), async (req,res)=>{
         You may use knowledge of your own to answer in detail, but stick to the context provided.
         Dont exceed 6 sentences:\n\n${context}\nQuestion: ${question}`;
         
-        const result = await ai.models.generateContent({
-            model : GEMINI_MODEL,
-            contents : prompt,
-        });
-
-        const answer = result.text;
+        const answer = await generate(prompt);
         res.json({ answer });
 
     }

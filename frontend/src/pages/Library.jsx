@@ -1,169 +1,169 @@
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { Search } from "lucide-react";
+import { api, useSessionGuard } from "@/lib/api";
+import "./Library.css";
 
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import './Library.css';
+const SORTS = {
+  newest: { label: "Newest first", fn: (a, b) => b.date - a.date },
+  oldest: { label: "Oldest first", fn: (a, b) => a.date - b.date },
+  title: { label: "Title A–Z", fn: (a, b) => a.title.localeCompare(b.title) },
+  authors: { label: "Author A–Z", fn: (a, b) => a.authors.localeCompare(b.authors) },
+};
 
-const serverURL = import.meta.env.VITE_SERVER_PATH;
+const clean = (list) => (list || []).map((s) => s.trim()).filter(Boolean);
 
-export default function Library({ setErrorMsg, setErrorCode, errorCode }) {
-  const [searchText, setSearchText] = useState('');
-  const [sortBy, setSortBy] = useState('Date');
-  const [activeFilter, setActiveFilter] = useState(null);
-  const [paperDocs, setPaperDocs] = useState([]);
-  const [displayed, setDisplayed] = useState([]);
-  const [filters, setFilters] = useState([]);
-  const navigate = useNavigate();
+export default function Library() {
+  const guard = useSessionGuard();
+  const [papers, setPapers] = useState([]);
+  const [status, setStatus] = useState("loading");
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
+  const [activeTag, setActiveTag] = useState(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(`${serverURL}/api/papers`,
-          {
-            method: "GET",
-            headers: {
-              "authorization": `bearer ${localStorage.session}`,
-            },
-          }
+    let ignore = false;
+    api("/api/papers")
+      .then((data) => {
+        if (ignore) return;
+        setPapers(
+          data.map((p) => ({
+            id: p._id,
+            title: p.title,
+            authors: clean(p.authors).join(", "),
+            tags: clean(p.tags),
+            date: new Date(p.publish_date),
+          }))
         );
-
-        if (!response.ok) {
-          const data = await response.json();
-          if (data.action === 'REAUTHENTICATE') {
-            setErrorCode(response.status);
-          }
-          else {
-            setErrorCode(500);
-          }
-          throw new Error(data.error || 'Server Failed');
-        }
-
-        const data = await response.json();
-        const tagSet = new Set();
-        const curPaperDocs = data.map((item) => {
-          item.tags.forEach(tag => tagSet.add(tag));
-          return {
-            id: item._id,
-            title: item.title,
-            tags: item.tags,
-            year: new Date(item.publish_date).getFullYear(),
-            authors: item.authors.join(', '),
-          };
-        });
-        setPaperDocs(curPaperDocs);
-        setFilters(Array.from(tagSet));
-      }
-      catch (err) {
-        setErrorMsg(err.message);
-        setPaperDocs([]);
-        setFilters([]);
-        navigate('/Error', { replace: true });
-        console.log(err);
-      }
-
-    }
-
-    fetchData();
-
-  }, [])
-
-  useEffect(() => {
-    const curDisplayed = paperDocs
-      .filter((paper) =>
-        (!activeFilter || paper.tags.includes(activeFilter)) &&
-        paper.title.toLowerCase().includes(searchText.toLowerCase())
-      )
-      .sort((a, b) => {
-        if (sortBy === 'Title') return a.title.localeCompare(b.title);
-        if (sortBy === 'Authors') return a.authors.localeCompare(b.authors);
-        return b.year - a.year;
+        setStatus("ready");
+      })
+      .catch((err) => {
+        if (ignore || guard(err)) return;
+        setStatus("error");
       });
-    setDisplayed(curDisplayed);
-  }, [activeFilter, sortBy, paperDocs, searchText])
+    return () => {
+      ignore = true;
+    };
+  }, [guard]);
+
+  const tags = useMemo(() => {
+    const counts = new Map();
+    papers.forEach((p) => p.tags.forEach((t) => counts.set(t, (counts.get(t) || 0) + 1)));
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([t]) => t);
+  }, [papers]);
+
+  const shown = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return papers
+      .filter((p) => !activeTag || p.tags.includes(activeTag))
+      .filter(
+        (p) =>
+          !q ||
+          p.title.toLowerCase().includes(q) ||
+          p.authors.toLowerCase().includes(q) ||
+          p.tags.some((t) => t.toLowerCase().includes(q))
+      )
+      .sort(SORTS[sortBy].fn);
+  }, [papers, search, sortBy, activeTag]);
 
   return (
-    <div className="library-page">
-      <aside className="sidebar">
-        <div className="sidebar-header">
-          <Link to='/'><h2>DocGenie</h2></Link>
+    <div className="page">
+      <div className="library-head">
+        <div>
+          <h1 className="page-title">Library</h1>
+          {status === "ready" && (
+            <p className="muted">
+              {papers.length} {papers.length === 1 ? "paper" : "papers"} shared by everyone on DocGenie
+            </p>
+          )}
         </div>
+        <Link to="/Upload" className="btn btn-primary">
+          Upload a paper
+        </Link>
+      </div>
 
-        <button className="btn upload-btn small-btn">
-          <Link to="/Upload" className="label">📤 Upload</Link>
-        </button>
-
-        <nav className="nav-links">
-          <button className="btn nav-btn small-btn">
-            <span className="label">📚 Library</span>
-          </button>
-          <button className="btn nav-btn small-btn">
-            <Link to="/Profile" className="label">👤 Profile</Link>
-          </button>
-        </nav>
-
-        <div className="search-filter">
-          <label>Search papers</label>
+      <div className="library-controls">
+        <label className="search">
+          <Search size={16} aria-hidden="true" />
           <input
-            type="text"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            placeholder="Search papers"
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search titles, authors, keywords"
+            aria-label="Search papers"
           />
-
-          <label>Filter by</label>
-          <div className="filter-buttons">
-            {filters.map((f, index) => (
-              <button
-                key={index}
-                className={`btn filter-btn small-filter-btn ${activeFilter === f ? 'active' : ''}`}
-                onClick={() => setActiveFilter(activeFilter === f ? null : f)}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
-        </div>
-      </aside>
-
-      <main className="main">
-        <header className="main-header">
-          <h1>Library</h1>
-          <select
-            className="sort-select"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-          >
-            <option>Sort by</option>
-            <option>Title</option>
-            <option>Authors</option>
-            <option>Date</option>
-          </select>
-        </header>
-        <div className="column-headers paper-row">
-          <div className="column-title">Title</div>
-          <div className="column-authors">Authors</div>
-          <div className="column-meta">Date / Tags</div>
-        </div>
-
-        <section className="paper-list">
-          {displayed.map((paper, index) => (
-            <Link to={`/View/${paper.id}`}>
-              <div className="paper-item" key={index}>
-                <div className="paper-row">
-                  <div className="paper-title">{paper.title}</div>
-                  <div className="paper-authors">{paper.authors}</div>
-                  <div className="paper-meta">
-                    <span className="year">{paper.year}</span>
-                    {paper.tags.map((tag, index2) => (
-                      <span className="tag-pill" key={index2}>{tag}</span>
-                    ))}
-                  </div>
-                </div>
-                {index !== displayed.length - 1 && <hr />}
-              </div>
-            </Link>
+        </label>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          aria-label="Sort papers"
+          className="select"
+        >
+          {Object.entries(SORTS).map(([key, s]) => (
+            <option key={key} value={key}>
+              {s.label}
+            </option>
           ))}
-        </section>
-      </main>
+        </select>
+      </div>
+
+      {tags.length > 0 && (
+        <div className="tag-filter" role="group" aria-label="Filter by keyword">
+          {tags.map((t) => (
+            <button
+              key={t}
+              className={`tag tag-button ${activeTag === t ? "is-active" : ""}`}
+              aria-pressed={activeTag === t}
+              onClick={() => setActiveTag(activeTag === t ? null : t)}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {status === "loading" && <p className="muted list-state">Loading papers…</p>}
+      {status === "error" && (
+        <p className="list-state error-text">
+          Couldn't load the library. Is the server running?
+        </p>
+      )}
+      {status === "ready" && papers.length === 0 && (
+        <div className="list-state">
+          <p>Nothing here yet.</p>
+          <p className="muted">
+            <Link to="/Upload" className="text-link">Upload the first paper</Link> to get started.
+          </p>
+        </div>
+      )}
+      {status === "ready" && papers.length > 0 && shown.length === 0 && (
+        <p className="muted list-state">No papers match your search.</p>
+      )}
+
+      {shown.length > 0 && (
+        <ol className="paper-list">
+          {shown.map((p) => (
+            <li key={p.id}>
+              <Link to={`/View/${p.id}`} className="paper-row">
+                <div className="paper-row-main">
+                  <h2 className="paper-row-title">{p.title}</h2>
+                  <p className="paper-row-authors">{p.authors}</p>
+                  {p.tags.length > 0 && (
+                    <ul className="paper-row-tags">
+                      {p.tags.map((t) => (
+                        <li key={t}>{t}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <span className="paper-row-year mono">
+                  {isNaN(p.date) ? "—" : p.date.getFullYear()}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ol>
+      )}
     </div>
   );
 }

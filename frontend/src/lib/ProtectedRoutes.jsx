@@ -1,9 +1,8 @@
 import { Outlet, Navigate } from "react-router-dom";
+import { getToken, getUser } from "./session";
 
-const ProtectedRoutes = ()=>{
-    const savedToken = localStorage.getItem("session");
-    const savedUser = localStorage.getItem("user");
-    return (savedToken && savedUser) ? (<Outlet />) : (<Navigate to="/"/>);
-}
+const ProtectedRoutes = () => {
+  return getToken() && getUser() ? <Outlet /> : <Navigate to="/" replace />;
+};
 
 export default ProtectedRoutes;

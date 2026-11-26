@@ -1,104 +1,75 @@
-import { useState, useEffect } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
-import './Insight.css';
-import { marked } from 'marked';
+import { useEffect, useState } from "react";
+import { useOutletContext } from "react-router-dom";
+import { api, useSessionGuard } from "@/lib/api";
+import Markdown from "@/components/Markdown";
+import "./Insight.css";
 
-const serverURL = import.meta.env.VITE_SERVER_PATH;
+// Generating a summary is slow and costs an API call, so keep the request per paper
+// for the session. This also stops StrictMode's double effect from firing it twice.
+const requests = new Map();
 
-export default function Insight({ setErrorCode, setErrorMsg, errorCode }) {
+function fetchSummary(id) {
+  if (!requests.has(id)) {
+    const p = api(`/api/insights/${id}`).then((d) => d.summary);
+    p.catch(() => requests.delete(id));
+    requests.set(id, p);
+  }
+  return requests.get(id);
+}
 
-    const { id } = useParams();
-    const [metaData, setMetaData] = useState('');
-    const [info, setinfo] = useState('');
-    const navigate = useNavigate();
+export default function Insight() {
+  const { id } = useOutletContext();
+  const guard = useSessionGuard();
+  const [summary, setSummary] = useState("");
+  const [error, setError] = useState("");
+  const [attempt, setAttempt] = useState(0);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await fetch(`${serverURL}/api/papers/${id}`, {
-                    method: "GET",
-                    headers: {
-                        "authorization": `bearer ${localStorage.session}`,
-                    },
-                });
+  useEffect(() => {
+    let ignore = false;
+    setError("");
+    fetchSummary(id)
+      .then((s) => !ignore && setSummary(s))
+      .catch((err) => {
+        if (ignore || guard(err)) return;
+        setError(err.message);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [id, guard, attempt]);
 
-                if (!response.ok) {
-                    const data = await response.json();
-                    if (data.action === 'REAUTHENTICATE') {
-                        setErrorCode(response.status);
-                    } else {
-                        setErrorCode(500);
-                    }
-                    throw new Error(data.error || 'Server Failed');
-                }
-
-                const item = await response.json();
-                setinfo(item);
-            } catch (err) {
-                setErrorMsg(err.message);
-                setinfo('');
-                navigate('/Error', { replace: true });
-            }
-        };
-        fetchData();
-    }, []);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await fetch(`${serverURL}/api/insights/${id}`, {
-                    method: "GET",
-                    headers: {
-                        "authorization": `bearer ${localStorage.session}`,
-                    },
-                });
-
-                if (!response.ok) {
-                    const data = await response.json();
-                    if (data.action === 'REAUTHENTICATE') {
-                        setErrorCode(response.status);
-                    } else {
-                        setErrorCode(500);
-                    }
-                    throw new Error(data.error || 'Server Failed');
-                }
-
-                const item = await response.json();
-                setMetaData(item);
-            } catch (err) {
-                setErrorMsg(err.message);
-                setMetaData('');
-                navigate('/Error', { replace: true });
-            }
-        };
-        fetchData();
-    }, []);
-
+  if (error) {
     return (
-        <div className="insight-container">
-            <aside className="sidebar">
-                <Link to='/'><div className="sidebar-logo">DocGenie</div></Link>
-                <nav className="sidebar-nav">
-                    <Link to="/Library" className="sidebar-link">📚 Library</Link>
-                    <Link to="/Profile" className="sidebar-link">👤 Profile</Link>
-                    <Link to={`/View/${id}`} className="sidebar-link">View Paper</Link>
-                    <Link to={`/Insight/${id}`} className="sidebar-link">Generate Insights</Link>
-                    <Link to={`/Chat/${id}`} className="sidebar-link">Ask Questions</Link>
-                </nav>
-            </aside>
-            <main className="insight-main">
-                {!metaData && (
-                    <section className="summary-section">
-                        <h2>Fetching Insights...</h2>
-                    </section>
-                )}
-                {metaData.summary && (
-                    <section className="summary-section">
-                        <h2>{info.title}</h2>
-                        <div dangerouslySetInnerHTML={{ __html: marked.parse(metaData.summary) }} />
-                    </section>
-                )}
-            </main>
-        </div>
+      <div className="insight-state">
+        <p className="insight-state-title">The summary couldn't be generated.</p>
+        <p className="muted">{error}</p>
+        <button className="btn btn-secondary mt-5" onClick={() => setAttempt((a) => a + 1)}>
+          Try again
+        </button>
+      </div>
     );
+  }
+
+  if (!summary) {
+    return (
+      <div className="insight-state">
+        <div className="loading-lines" aria-hidden="true">
+          <span /><span /><span /><span />
+        </div>
+        <p className="insight-state-title">Reading the paper…</p>
+        <p className="muted">
+          The first summary of a paper usually takes 20–40 seconds. After that it's quicker.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <article className="insight">
+      <p className="insight-note">
+        Generated from the paper's text. Treat the scores as a second opinion, not a verdict.
+      </p>
+      <Markdown>{summary}</Markdown>
+    </article>
+  );
 }
