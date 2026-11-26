@@ -4,12 +4,6 @@ DocGenie is an intelligent research paper management system that allows users to
 
 ---
 
-## Demo
-
-[Watch the demo](https://www.youtube.com/watch?v=UqC96p1uJJg)
-
----
-
 ## Technologies used
 
 - Node and Express for backend logic and managing API routes
@@ -50,21 +44,20 @@ DocGenie is an intelligent research paper management system that allows users to
 
 ### 3. Question Answering using RAG
 
-* PDFs are parsed and chunked into text segments using **LangChain**'s document loaders and text splitters.
-* These chunks are embedded using **Google Gemini's** embedder, into vector representations.
-* The embeddings are stored locally.
-* When the user inputs a question, **FAISS** retrieves the most relevent chunks based on semantic similarity.
+* PDFs are parsed with **pdf-parse** and split into text chunks using **LangChain**'s text splitter.
+* These chunks are embedded using **Google Gemini's** embedding model (`gemini-embedding-001`) into vector representations.
+* The embeddings are stored locally in a **FAISS** index per paper (`backend/faiss_data/<paper id>`).
+* When the user inputs a question, **FAISS** retrieves the most relevant chunks based on semantic similarity.
 * A prompt is generated combining these chunks with the question, and sent to **Google Gemini**.
 
 ## Prerequisites
 
 Ensure you have the following installed:
 
-- [Node.js](https://nodejs.org/) (v16 or later)
+- [Node.js](https://nodejs.org/) (v20 or later)
 - npm or yarn
-- A Google Cloud project with:
-  - GenAI (Gemini) API enabled
-  - OAuth2 credentials
+- A Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey)
+- A Google Cloud project with OAuth2 credentials
 - A MongoDB Atlas cluster (free tier works fine)
 - A Cloudinary account
 
@@ -116,13 +109,16 @@ GEMINI_API_KEY=
 # JWT
 JWT_SECRET_KEY=
 
+# Optional: override the Gemini models used for summaries and chat
+# GEMINI_MODEL=gemini-flash-latest
+# GEMINI_FALLBACK_MODEL=gemini-flash-lite-latest
 ```
 For frontend, create a `.env` file inside `./frontend`
 Set the following variables:
 
-``` dotenv
-VITE_GOOGLE_CLIENT_ID=
-VITE_SERVER_PATH = http://localhost:8000
+```dotenv
+VITE_GOOGLE_CLIENT_ID=        # same value as GOOGLE_CLIENT_ID in the backend
+VITE_SERVER_PATH=http://localhost:8000
 ```
 
 ---
@@ -132,16 +128,18 @@ VITE_SERVER_PATH = http://localhost:8000
 ### 1. Cloudinary
 
 1. Go to [Cloudinary](https://cloudinary.com/) and sign up for a free account.
-2. In the dashboard, navigate to **Settings** → **Upload**.
+2. In the console, go to **Settings** → **API Keys**.
 3. Copy your **Cloud name**, **API Key**, and **API Secret**, and paste them into your `.env` file.
+4. The free plan rejects files over 10 MB, so the upload form limits PDFs to that size.
 
 ### 2. Google OAuth2
 
 1. Visit the [Google Cloud Console](https://console.cloud.google.com/).
 2. Create or select a project.
-3. Under **APIs & Services**, click **OAuth consent screen**, configure your app, and publish.
+3. Under **APIs & Services**, click **OAuth consent screen** and configure your app. While it is in testing mode, add the Google accounts that should be able to sign in as **test users** (or publish the app).
 4. Go to **Credentials** → **Create Credentials** → **OAuth client ID**.
-5. Choose **Web application**, enter your authorized redirect URIs (e.g., `http://localhost:8000/auth/google/callback`), then copy the **Client ID** and **Client Secret**.
+5. Choose **Web application** and add `http://localhost:5173` under **Authorized JavaScript origins**. No redirect URI is needed: sign-in happens in a popup and the frontend sends the authorization code to the backend.
+6. Copy the **Client ID** and **Client Secret** into the backend `.env`, and the same Client ID into the frontend `.env`.
 
 ### 3. MongoDB
 
@@ -149,14 +147,13 @@ VITE_SERVER_PATH = http://localhost:8000
 2. Create a new free cluster.
 3. In **Database Access**, add a user and password.
 4. In **Network Access**, whitelist your IP or allow access from anywhere (`0.0.0.0/0`).
-5. Click **Clusters** → **Connect** → **Connect your application**, copy the connection string URI, and set `MONGO_URI` in your `.env`.
+5. Click **Clusters** → **Connect** → **Drivers**, copy the connection string URI (fill in your password), and set `MONGO_URI` in your `.env`.
 
 ### 4. Google Gemini (GenAI)
 
-1. In the Google Cloud Console, enable the **Vertex AI** API.
-2. Under **APIs & Services** → **Credentials**, create an **API key**.
-3. Optionally restrict by IP or referer.
-4. Copy the key and set `GEMINI_API_KEY`.
+1. Go to [Google AI Studio](https://aistudio.google.com/apikey) and sign in.
+2. Click **Create API key** (it creates or uses a Google Cloud project for you).
+3. Copy the key and set `GEMINI_API_KEY`. The same key is used for both the chat/summary model and the embeddings.
 
 ### 5. Generating a JWT Secret
 
@@ -184,7 +181,9 @@ cd ./backend
 node server.js
 ```
 
-The server will spin up on `http://localhost:8000` by default.
+The server will spin up on `http://localhost:8000` by default. Start it from inside `./backend`, since it reads `.env` and `faiss_data/` relative to the current folder. For auto-reload during development, use `npx nodemon server.js` instead.
+
+> **Upgrading from an older version?** Delete the folders inside `backend/faiss_data/`. They were built with the retired `embedding-001` model and won't work with the current one. They are rebuilt automatically the next time a paper is opened.
 
 To load the react app,
 
